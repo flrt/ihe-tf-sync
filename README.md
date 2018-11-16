@@ -59,8 +59,8 @@ Clone these repo and run the `sync.py` program.
     optional arguments:
       -h, --help       show this help message and exit
       --output OUTPUT  output directory in wich the documents will be downloaded
-      --domain DOMAIN  specify domain(s)
-
+      --confdir CONFDIR  directory containing the meta data about the documents
+      --domain DOMAIN    specify domain(s)
 
 
 # Run with docker
@@ -69,12 +69,24 @@ Just one line to get your documents. Mount your local directory and call the pro
 
 Mount the local directory with the `-v` parameter : `$PWD` for the current directory to `/opt/data`.
 
-Call `python sync.py` with or without parameters.
+Call `python sync.py` with or without parameters. See `sync.sh` for syntax.
 
+## Build your own container
 
+    # docker build -t name ihe-tf-sync:1.0 .
+
+Then use it :
+    
     # mkdir ihe_docs
     # cd ihe_docs
     # docker run -ti --rm -v $PWD:/opt/data ihe-tf-sync:1.0 python sync.py --domain PHDSC
+
+## Use the container in docker Hub
+Nothing to build, just reference the [flrt/ihe-tf-sync](https://hub.docker.com/r/flrt/ihe-tf-sync/) container.
+
+    # mkdir ihe_docs
+    # cd ihe_docs
+    # docker run -ti --rm -v $PWD:/opt/data flrt/ihe-tf-sync python sync.py --domain PHDSC
 
 
 As a result, documents are downloaded :
@@ -100,6 +112,6 @@ Remember to be informed by IHE mechanisms :
 - [mail from IHE about Technical Publications](https://www.ihe.net/monthly-newsletters/technical-publications/)
 - [Linkedin](https://www.linkedin.com/company/iheintl/)
 
-# Lisence 
+# License 
 
 [MIT](LICENSE) 
