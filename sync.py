@@ -137,7 +137,7 @@ class Synchro:
         """
         Save global informations about IHE documents
         """
-        infofn = os.path.join(DATA_ROOTDIR, self.outputdir, GENERAL_INFO_FILENAME)
+        infofn = os.path.join(self.outputdir, GENERAL_INFO_FILENAME)
         with open(infofn, "w") as fout:
             fout.write(f"Last checked : {datetime.datetime.now().isoformat()}\n")
             if domains:
