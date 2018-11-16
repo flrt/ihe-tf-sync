@@ -67,7 +67,7 @@ Clone these repo and run the `sync.py` program.
 
 Just one line to get your documents. Mount your local directory and call the program.
 
-Mount the local directory with the `-v` parameter : `$PWD` for the current directory to `/opt/data`.
+Mount the local directory with the `-v` parameter : `${PWD}` for the current directory to `/opt/data`.
 
 Call `python sync.py` with or without parameters. See `sync.sh` for syntax.
 
@@ -79,14 +79,14 @@ Then use it :
     
     # mkdir ihe_docs
     # cd ihe_docs
-    # docker run -ti --rm -v $PWD:/opt/data ihe-tf-sync:1.0 python sync.py --domain PHDSC
+    # docker run -ti --rm -v ${PWD}:/opt/data ihe-tf-sync:1.0 python sync.py --domain PHDSC
 
 ## Use the container in docker Hub
 Nothing to build, just reference the [flrt/ihe-tf-sync](https://hub.docker.com/r/flrt/ihe-tf-sync/) container.
 
     # mkdir ihe_docs
     # cd ihe_docs
-    # docker run -ti --rm -v $PWD:/opt/data flrt/ihe-tf-sync python sync.py --domain PHDSC
+    # docker run -ti --rm -v ${PWD}:/opt/data flrt/ihe-tf-sync python sync.py --domain PHDSC
 
 
 As a result, documents are downloaded :

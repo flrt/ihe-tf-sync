@@ -8,8 +8,8 @@
 if [ $# -eq 1 ]
   then
   	echo "Sync domains : $1"
-	docker run -ti --rm -v $PWD:/opt/data flrt/ihe-tf-sync python sync.py --domain $1
+	docker run -ti --rm -v ${PWD}:/opt/data flrt/ihe-tf-sync python sync.py --domain $1
   else
   	echo "Sync all domains"
-  	docker run -ti --rm -v $PWD:/opt/data flrt/ihe-tf-sync python sync.py 
+  	docker run -ti --rm -v ${PWD}:/opt/data flrt/ihe-tf-sync python sync.py 
 fi
