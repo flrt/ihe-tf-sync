@@ -41,7 +41,7 @@ class Synchro:
         self.doc = {}
         self.outputdir = outputdir
 
-    def get_infos(self, title, href):
+    def get_infos(self, title, href, domain_filter):
         """
         get infos on document via URL
         retrieve domain name (e.g. RAD, ITI, etc.)
@@ -49,6 +49,7 @@ class Synchro:
 
         :param str title: Title of the document
         :param str href: URL of the document
+        :param list domain_filter: list of domain to take into account
         :return dict: dict with informations about the resource
         """
 
@@ -70,26 +71,31 @@ class Synchro:
             "href": _href,
             "title": title,
         }
-        # get more info with a HEAD request
-        try:
-            headreq = requests.head(_href)
 
-            if headreq.status_code == 200:
-                docinfo["last-modified"] = headreq.headers["Last-Modified"]
-                docinfo["size"] = int(headreq.headers["Content-Length"])
-                docinfo["etag"] = headreq.headers["Etag"]
-            else:
-                sys.stderr.write(f"Error {headreq.status_code} - URL={_href}\n")
-        except Exception as ex:
-            sys.stderr.writelines([f"Error HEAD request {_href}", str(ex), "\n"])
+        if not domain_filter or (domain_filter and docinfo['domain'] in domain_filter):
+            print('.', end='')
+            # get more info with a HEAD request
+            try:
+                headreq = requests.head(_href)
+
+                if headreq.status_code == 200:
+                    docinfo["last-modified"] = headreq.headers["Last-Modified"]
+                    docinfo["size"] = int(headreq.headers["Content-Length"])
+                    docinfo["etag"] = headreq.headers["Etag"]
+                else:
+                    sys.stderr.write(f"Error {headreq.status_code} - URL={_href}\n")
+            except Exception as ex:
+                sys.stderr.writelines([f"Error HEAD request {_href}", str(ex), "\n"])
 
         return docinfo
 
-    def load_main_page(self):
+    def load_main_page(self, domain_filter=None):
         """
         Load main html page
         Find documents
         Classify them
+
+        :param list domain_filter: list of domain to take into account
         """
 
         unsorted_docs = {}
@@ -99,9 +105,11 @@ class Synchro:
             links = list(filter(lambda x: x.get("href"), soup.find_all("a")))
             pdf_list = list(filter(lambda x: x.get("href").endswith(".pdf"), links))
 
+            print("Get information about documents")
             for link in pdf_list:
-                docinfo = self.get_infos(link.text, link.get("href"))
+                docinfo = self.get_infos(link.text, link.get("href"), domain_filter)
                 unsorted_docs[docinfo["filename"]] = docinfo
+        print(f"\n{len(unsorted_docs)} documents found in IHE website.")
         self.classify(unsorted_docs)
 
     def classify(self, unsorted_docs):
@@ -289,7 +297,7 @@ def main():
 
     sy = Synchro(outputdir, previous_docs)
     # find all available documents
-    sy.load_main_page()
+    sy.load_main_page(domains)
 
     # sync with local directory
     sy.sync_all(domains)
