@@ -151,6 +151,9 @@ class Synchro:
         :param list domains: list of domain to take into account
 
         """
+        if not os.path.exists(self.outputdir):
+            os.makedirs(self.outputdir)
+            
         infofn = os.path.join(self.outputdir, GENERAL_INFO_FILENAME)
         with open(infofn, "w") as fout:
             fout.write(f"Last checked : {datetime.datetime.now().isoformat()}\n")
