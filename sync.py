@@ -153,7 +153,7 @@ class Synchro:
         """
         if not os.path.exists(self.outputdir):
             os.makedirs(self.outputdir)
-            
+
         infofn = os.path.join(self.outputdir, GENERAL_INFO_FILENAME)
         with open(infofn, "w") as fout:
             fout.write(f"Last checked : {datetime.datetime.now().isoformat()}\n")
@@ -215,13 +215,11 @@ class Synchro:
                     if domain not in self.refdoc:
                         self.refdoc[domain] = {}
 
-                    if keydoc in self.refdoc[domain]:
-                        # doc already present and verify local copy
-                        if self.is_different(domain, keydoc) or not self.check_local(
-                            docinfo
-                        ):
-                            print(f"Newer document {keydoc} found: download it...")
-                            self.download(docinfo)
+                    if self.is_different(domain, keydoc) or not self.check_local(
+                        docinfo
+                    ):
+                        print(f"Newer document {keydoc} found: download it...")
+                        self.download(docinfo)
 
     def document_path(self, docinfo):
         """
