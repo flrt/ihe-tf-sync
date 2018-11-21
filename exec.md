@@ -8,9 +8,122 @@ These execution will
 - get the documents of PALM domain : delete LAB docs, download PALM docs
 - add the documents of PAT domain
 
+On windows plateform
 
+    PS C:\doc\ihe-tf> Invoke-WebRequest -Uri https://raw.githubusercontent.com/flrt/ihe-tf-sync/master/sync.ps1 -OutFile syn
+    c.ps1
+    PS C:\doc\ihe-tf> .\sync.ps1 LAB
+    Sync domains : LAB
+    Get information about documents
+    ..
+    223 documents found in IHE website.
+    TF: 8 documents
+    PAT: 3 documents
+    CARD: 17 documents
+    DENT: 1 documents
+    ENDO: 2 documents
+    EYECARE: 6 documents
+    ITI: 41 documents
+    LAB: 2 documents
+    PALM: 7 documents
+    PCC: 39 documents
+    PHDSC: 2 documents
+    PCD: 15 documents
+    SUPPL: 2 documents
+    PHARMACY: 11 documents
+    QRPH: 26 documents
+    QUALITY: 1 documents
+    RO: 5 documents
+    RAD: 35 documents
+    
+    Clean documents not in sync...
+    
+    Syncing LAB domain...
+    Newer document IHE_LAB_Suppl_GIR_Rev1-1_TI_2010-10_15.pdf found: download it...
+    Newer document IHE_LAB_Suppl_ILW.pdf found: download it...
+    
+![step 1](doc/step1-LAB.png)
+
+    PS C:\doc\ihe-tf> .\sync.ps1 PALM
+    Sync domains : PALM
+    Get information about documents
+    .......
+    223 documents found in IHE website.
+    TF: 8 documents
+    PAT: 3 documents
+    CARD: 17 documents
+    DENT: 1 documents
+    ENDO: 2 documents
+    EYECARE: 6 documents
+    ITI: 41 documents
+    LAB: 2 documents
+    PALM: 7 documents
+    PCC: 39 documents
+    PHDSC: 2 documents
+    PCD: 15 documents
+    SUPPL: 2 documents
+    PHARMACY: 11 documents
+    QRPH: 26 documents
+    QUALITY: 1 documents
+    RO: 5 documents
+    RAD: 35 documents
+    
+    Clean documents not in sync...
+    Obsolete document IHE_LAB_Suppl_GIR_Rev1-1_TI_2010-10_15.pdf found: delete it...
+    Obsolete document IHE_LAB_Suppl_ILW.pdf found: delete it...
+    
+    Syncing PALM domain...
+    Newer document IHE_PaLM_TF_Vol1.pdf found: download it...
+    Newer document IHE_PaLM_TF_Vol2a.pdf found: download it...
+    Newer document IHE_PaLM_TF_Vol2b.pdf found: download it...
+    Newer document IHE_PaLM_TF_Vol2c.pdf found: download it...
+    Newer document IHE_PaLM_TF_Vol2x.pdf found: download it...
+    Newer document IHE_PaLM_TF_Vol3.pdf found: download it...
+    Newer document IHE_PaLM_Suppl_APSR.pdf found: download it...
+    PS C:\doc\ihe-tf>
+
+![step 2](doc/step2-PALM.png)
+
+    PS C:\doc\ihe-tf> .\sync.ps1 PALM,PAT
+    Sync domains : PALM,PAT
+    Get information about documents
+    ..........
+    223 documents found in IHE website.
+    TF: 8 documents
+    PAT: 3 documents
+    CARD: 17 documents
+    DENT: 1 documents
+    ENDO: 2 documents
+    EYECARE: 6 documents
+    ITI: 41 documents
+    LAB: 2 documents
+    PALM: 7 documents
+    PCC: 39 documents
+    PHDSC: 2 documents
+    PCD: 15 documents
+    SUPPL: 2 documents
+    PHARMACY: 11 documents
+    QRPH: 26 documents
+    QUALITY: 1 documents
+    RO: 5 documents
+    RAD: 35 documents
+    
+    Clean documents not in sync...
+    
+    Syncing PAT domain...
+    Newer document IHE_PAT_TF_Rev2-0_Vol1_TI_2010-07-23.pdf found: download it...
+    Newer document IHE_PAT_TF_Rev2-0_Vol2_TI_2010-07-23.pdf found: download it...
+    Newer document IHE_PAT_Suppl_ARPH_Rev2-0_TI_2010-07-23.pdf found: download it...
+    
+    Syncing PALM domain...
+    PS C:\doc\ihe-tf>
  
+![step 3](doc/step3-PAT.png)
+
 # global Synchro : all domains
+
+On macOs (or Linux)
+
     python sync.py
     Get information about documents
     .................................................................................................................................................................................................................................
@@ -293,4 +406,3 @@ These execution will
     Newer document IHE_RAD_White-Paper_Codes_Rev2.0_2014-03-07.pdf found: download it...
     Newer document IHE_RAD_White-Paper_XSM-WD_Rev1-0_2012-12-17.pdf found: download it...
     Newer document IHE_RAD_White-Paper_RadiologyReportTemplates_Rev1-0_2012-12-17.pdf found: download it...
-    root@8860cdf0565e:/opt#
