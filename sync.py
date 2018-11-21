@@ -11,6 +11,8 @@ __version__ = "1.0"
 __copyright__ = "Copyright 2018, Frederic Laurent"
 __license__ = "MIT"
 
+
+import os
 import os.path
 import sys
 import requests
@@ -19,7 +21,6 @@ import argparse
 import datetime
 from bs4 import BeautifulSoup
 import helpers
-
 
 IHE_URL = "https://www.ihe.net"
 IHE_TF_URL = f"{IHE_URL}/resources/technical_frameworks/"
@@ -72,8 +73,8 @@ class Synchro:
             "title": title,
         }
 
-        if not domain_filter or (domain_filter and docinfo['domain'] in domain_filter):
-            print('.', end='')
+        if not domain_filter or (domain_filter and docinfo["domain"] in domain_filter):
+            print(".", end="", flush=True)
             # get more info with a HEAD request
             try:
                 headreq = requests.head(_href)
@@ -111,6 +112,8 @@ class Synchro:
                 unsorted_docs[docinfo["filename"]] = docinfo
         print(f"\n{len(unsorted_docs)} documents found in IHE website.")
         self.classify(unsorted_docs)
+        for key, value in self.doc.items():
+            print(f"{key}: {len(value)} documents")
 
     def classify(self, unsorted_docs):
         """
@@ -132,7 +135,7 @@ class Synchro:
         for k in keys:
             for k2 in keys:
                 if k != k2 and k.startswith(k2):
-                    print(f"Moving documents from {k2} to {k}")
+                    # print(f"Moving documents from {k2} to {k}")
                     for keydoc, docinfo in self.doc[k2].items():
                         self.doc[k][keydoc] = docinfo
                     self.doc[k2] = {}
@@ -144,6 +147,9 @@ class Synchro:
     def save_infos(self, domains):
         """
         Save global informations about IHE documents
+
+        :param list domains: list of domain to take into account
+
         """
         infofn = os.path.join(self.outputdir, GENERAL_INFO_FILENAME)
         with open(infofn, "w") as fout:
@@ -165,16 +171,42 @@ class Synchro:
 
         :return : True if documents are different
         """
+        if not ("etag" in self.refdoc and "etag" in self.doc):
+            return False
+        if not ("size" in self.refdoc and "size" in self.doc):
+            return False
         return (
             self.doc[domain][keydoc]["etag"] != self.refdoc[domain][keydoc]["etag"]
             and self.doc[domain][keydoc]["size"] != self.refdoc[domain][keydoc]["size"]
         )
 
     def sync_all(self, domain_filter=None):
+        """
+
+        Sync documents : 
+        - suppress all documents that are obsolete : not concerned aka not in domain_filter
+        - test if a new document has to be download : new document available or new version of the document
+
+        :param list domain_filter: list of domain to take into account
+        """
+        print("\nClean documents not in sync...")
+        # looking for obsolete documents
+        for domain, docs in self.refdoc.items():
+            for keydoc, docinfo in self.refdoc[domain].items():
+                if "etag" in docinfo:
+                    # already downloaded
+
+                    if (
+                        keydoc not in self.doc[domain]
+                        or "etag" not in self.doc[domain][keydoc]
+                    ):
+                        print(f"Obsolete document {keydoc} found: delete it...")
+                        self.delete(docinfo)
+
         # looking for new documents
         for domain, docs in self.doc.items():
             if domain_filter is None or domain in domain_filter:
-                print(f"Syncing {domain} domain...")
+                print(f"\nSyncing {domain} domain...")
                 # domain to sync
                 for keydoc, docinfo in self.doc[domain].items():
                     if domain not in self.refdoc:
@@ -185,20 +217,8 @@ class Synchro:
                         if self.is_different(domain, keydoc) or not self.check_local(
                             docinfo
                         ):
-                            print(f"Newer document {keydoc} found: update it...")
+                            print(f"Newer document {keydoc} found: download it...")
                             self.download(docinfo)
-
-                    else:
-                        # doc does not exist
-                        print(f"New document {keydoc} found: download it...")
-                        self.download(docinfo)
-        # looking for obsolete documents
-        for domain, docs in self.refdoc.items():
-            if domain_filter is None or domain in domain_filter:
-                for keydoc, docinfo in self.refdoc[domain].items():
-                    if keydoc not in self.doc[domain]:
-                        print(f"Obsolete document {keydoc} found: delete it...")
-                        self.delete(docinfo)
 
     def document_path(self, docinfo):
         """
@@ -227,17 +247,21 @@ class Synchro:
 
     def delete(self, docinfo):
         """
-        Delete the localfile, previously downloaded, because
+        Delete the local files, previously downloaded, because
         these document is now obsolete e.g. nore longer linked
         into the IHE web page.
 
         :param dict docinfo: information about record to
-        delete, in the end, delete the local file
+        delete. delete the local file
         """
 
         filename = self.document_path(docinfo)
+        dirname = os.path.dirname(filename)
         try:
             os.remove(filename)
+            # remove dir if empty
+            if not len(os.listdir(dirname)):
+                os.removedirs(dirname)
         except OSError as err:
             sys.stderr.writelines(
                 [f"Error while deleting {filename}\n", str(err), "\n"]
@@ -262,10 +286,10 @@ class Synchro:
 
 def main():
     """
-        Programme principal
+        Main 
 
-        - parse les arguments
-        - lance les traitements
+        - argument parsing
+        - process : load information, synchonize documents
     """
 
     parser = argparse.ArgumentParser()

@@ -102,6 +102,26 @@ As a result, documents are downloaded :
 
     3 directories, 3 files
 
+## Even simplier
+If you don't want to deal with docker explicitly, 2 shells can provide help :
+
+- sync.sh for *nix environment
+- sync.bat for windows environment
+
+**Required** : docker has to been installed before
+
+Then you can simply
+ 
+### *nix environment 
+
+    $ curl -O https://raw.githubusercontent.com/flrt/ihe-tf-sync/master/sync.sh
+    $ sh sync.sh ITI,RAD
+
+### windows environment
+
+    $ Invoke-WebRequest -Uri https://raw.githubusercontent.com/flrt/ihe-tf-sync/master/sync.ps1 -OutFile sync.ps1 
+    $ sync.ps1 ITI,RAD   
+
 # Keep up-to-date
 Once you ran the program, each new execution will download only the newer documents (since last run).
 
