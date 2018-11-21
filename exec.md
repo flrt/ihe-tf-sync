@@ -124,7 +124,8 @@ On windows plateform
 
 On macOs (or Linux)
 
-    python sync.py
+    $ curl -O https://raw.githubusercontent.com/flrt/ihe-tf-sync/master/sync.sh
+    $ sh sync.sh
     Get information about documents
     .................................................................................................................................................................................................................................
     223 documents found in IHE website.
