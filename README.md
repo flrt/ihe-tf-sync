@@ -14,12 +14,12 @@ Then subdirectories will be created to store documents by domains.
 
 Domains can be specified, with the `--domain` argument.
 
-To get all documents from two domains : ITI and CARD, simplify run
+To get all documents from two domains: ITI and CARD, simplify run
 
     python sync.py --domain ITI,CARD
 
 
-The directory will updated to be something like this : 
+The directory will updated to be something like this: 
 
 
     documents
@@ -49,9 +49,11 @@ The directory will updated to be something like this :
 
 
 # Run without docker
-Clone these repo and run the `sync.py` program.
+Clone this repo and run the `sync.py` program.
 
 
+    # git clone https://github.com/flrt/ihe-tf-sync.git
+    # cd ihe-tf-sync
     # python sync.py --help
     
     usage: sync.py [-h] [--output OUTPUT] [--domain DOMAIN]
@@ -67,7 +69,7 @@ Clone these repo and run the `sync.py` program.
 
 Just one line to get your documents. Mount your local directory and call the program.
 
-Mount the local directory with the `-v` parameter : `${PWD}` for the current directory to `/opt/data`.
+Mount the local directory with the `-v` parameter `${PWD}` for the current directory to `/opt/data`.
 
 Call `python sync.py` with or without parameters. See `sync.sh` for syntax.
 
@@ -89,7 +91,7 @@ Nothing to build, just reference the [flrt/ihe-tf-sync](https://hub.docker.com/r
     # docker run -ti --rm -v ${PWD}:/opt/data flrt/ihe-tf-sync python sync.py --domain PHDSC
 
 
-As a result, documents are downloaded :
+As a result, documents are downloaded:
 
     # tree
     .
@@ -103,12 +105,12 @@ As a result, documents are downloaded :
     3 directories, 3 files
 
 ## Even simplier
-If you don't want to deal with docker explicitly, 2 shells can provide help :
+If you don't want to deal with docker explicitly, 2 shells can provide help:
 
 - sync.sh for *nix environment
 - sync.bat for windows environment
 
-**Required** : docker has to been installed before
+**Required**: docker has to been installed before
 
 Then you can simply
  
@@ -122,10 +124,13 @@ Then you can simply
     $ Invoke-WebRequest -Uri https://raw.githubusercontent.com/flrt/ihe-tf-sync/master/sync.ps1 -OutFile sync.ps1 
     $ sync.ps1 ITI,RAD   
 
+# Example
+Look at [exec samples](exec.md) for more details.
+
 # Keep up-to-date
 Once you ran the program, each new execution will download only the newer documents (since last run).
 
-Remember to be informed by IHE mechanisms :
+Remember to be informed by IHE mechanisms:
 
 - [twitter](https://twitter.com/IHEIntl) 
 - [Monthly Newsletters](https://www.ihe.net/monthly-newsletters/)
