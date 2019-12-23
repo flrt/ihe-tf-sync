@@ -47,6 +47,93 @@ The directory will updated to be something like this:
 
     2 directories, 58 files
 
+By default, only documents from the technical framework are searched. But it's possible to extended the search to the documents in public comment. In that case, just add the `--comment` in the command line.
+
+[*Example*](#example-comment) : synchronize documents from `PHARMACY` domain. Then add the documents available for public comments (Can be done in a single step, obviously)
+
+1.Synchronize documents in final state:
+
+
+
+    $ python sync.py --output /home/fred/doc/ihe-docs --confdir /home/fred/doc/ihe-conf --domain PHARMACY
+    Get information about documents
+    .........
+    235 documents found in IHE website : technical_frameworks
+
+    Available documents :
+    TF: 8 documents
+    PAT: 3 documents
+    CARD: 17 documents
+    DENT: 1 documents
+    ENDO: 3 documents
+    EYECARE: 7 documents
+    ITI: 42 documents
+    SUPPL: 3 documents
+    LAB: 2 documents
+    PALM: 9 documents
+    PCC: 39 documents
+    PHDSC: 2 documents
+    PCD: 16 documents
+    PHARMACY: 11 documents
+    QRPH: 28 documents
+    QUALITY: 1 documents
+    RO: 7 documents
+    RAD: 36 documents
+
+    Clean documents not in sync...
+
+    Syncing PHARMACY domain...
+    Newer document IHE_Pharmacy_Suppl_Common.pdf found: download it...
+    Newer document IHE_Pharmacy_Suppl_DIS.pdf found: download it...
+    Newer document IHE_Pharmacy_Suppl_CMA.pdf found: download it...
+    Newer document IHE_Pharmacy_Suppl_PML.pdf found: download it...
+    Newer document IHE_Pharmacy_Suppl_CMPD.pdf found: download it...
+    Newer document IHE_Pharmacy_Suppl_MTP.pdf found: download it...
+    Newer document IHE_Pharmacy_Suppl_PADV.pdf found: download it...
+    Newer document IHE_Pharmacy_Suppl_PRE.pdf found: download it...
+    Newer document IHE_Pharmacy_Suppl_HMW.pdf found: download it...
+    Newer document IHE_Pharm_Suppl_MMA.pdf found: download it...
+    Newer document IHE_Pharm_Suppl_UBP.pdf found: download it...
+    
+
+2.Add documents in public comments:
+
+
+
+    $ python sync.py --output /home/fred/doc/ihe-docs --confdir /home/fred/doc/ihe-conf --comment --domain PHARMACY
+    Get information about documents
+    .........
+    235 documents found in IHE website : technical_frameworks
+    Get information about documents
+
+    10 documents found in IHE website : public_comment
+
+    Available documents :
+    TF: 8 documents
+    PAT: 3 documents
+    CARD: 18 documents
+    DENT: 1 documents
+    ENDO: 3 documents
+    EYECARE: 7 documents
+    ITI: 42 documents
+    SUPPL: 3 documents
+    LAB: 2 documents
+    PALM: 10 documents
+    PCC: 40 documents
+    PHDSC: 2 documents
+    PCD: 17 documents
+    PHARMACY: 12 documents
+    QRPH: 31 documents
+    QUALITY: 1 documents
+    RO: 9 documents
+    RAD: 36 documents
+
+    Clean documents not in sync...
+
+    Syncing PHARMACY domain...
+    Newer document IHE_Pharm_Suppl_MMA.pdf found: download it...
+    Newer document IHE_Pharm_Suppl_UBP.pdf found: download it...
+    Newer document IHE_PHARM_WP_Supply_Rev1-0_PC_2019-11-18.pdf found: download it...
 
 # Run without docker
 Clone this repo and run the `sync.py` program.
@@ -62,6 +149,7 @@ Clone this repo and run the `sync.py` program.
       -h, --help       show this help message and exit
       --output OUTPUT  output directory in wich the documents will be downloaded
       --confdir CONFDIR  directory containing the meta data about the documents
+      --comment          get documents in public comments
       --domain DOMAIN    specify domain(s)
 
 
