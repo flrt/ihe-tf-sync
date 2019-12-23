@@ -24,6 +24,7 @@ import helpers
 
 IHE_URL = "https://www.ihe.net"
 IHE_TF_URL = f"{IHE_URL}/resources/technical_frameworks/"
+IHE_COMMENT_URL = f"{IHE_URL}/resources/public_comment/"
 DATA_ROOTDIR = "data"
 DOC_INFO_FILENAME = "docs.json"
 GENERAL_INFO_FILENAME = "infos.txt"
@@ -90,9 +91,9 @@ class Synchro:
 
         return docinfo
 
-    def load_main_page(self, domain_filter=None):
+    def load_ihe_page(self, webpage=IHE_TF_URL, domain_filter=None):
         """
-        Load main html page
+        Load IHE html page
         Find documents
         Classify them
 
@@ -100,7 +101,7 @@ class Synchro:
         """
 
         unsorted_docs = {}
-        req = requests.get(IHE_TF_URL)
+        req = requests.get(webpage)
         if req.status_code == 200:
             soup = BeautifulSoup(req.text, "html5lib")
             links = list(filter(lambda x: x.get("href"), soup.find_all("a")))
@@ -110,10 +111,17 @@ class Synchro:
             for link in pdf_list:
                 docinfo = self.get_infos(link.text, link.get("href"), domain_filter)
                 unsorted_docs[docinfo["filename"]] = docinfo
-        print(f"\n{len(unsorted_docs)} documents found in IHE website.")
+        print(f"\n{len(unsorted_docs)} documents found in IHE website : {webpage.split('/')[-2]}")
         self.classify(unsorted_docs)
+
+    def display_available_docs(self):
+        """
+        Display how many documents are available in each domain.
+        """
+        print("\nAvailable documents :")
         for key, value in self.doc.items():
             print(f"{key}: {len(value)} documents")
+
 
     def classify(self, unsorted_docs):
         """
@@ -278,7 +286,7 @@ class Synchro:
         """
         filename = self.document_path(docinfo)
 
-        if os.path.exists(filename):
+        if 'size' in docinfo and os.path.exists(filename):
             r = os.stat(filename)
             return r.st_size == docinfo["size"]
 
@@ -304,6 +312,11 @@ def main():
         help="directory containing the meta data about the documents",
         default="conf",
     )
+    parser.add_argument(
+        "--comment",
+        help="get documents in public comments",
+        action="store_true"
+    )
     parser.add_argument("--domain", help="specify domain(s)", default=None)
     args = parser.parse_args()
 
@@ -322,7 +335,14 @@ def main():
 
     sy = Synchro(outputdir, previous_docs)
     # find all available documents
-    sy.load_main_page(domains)
+    sy.load_ihe_page(IHE_TF_URL, domains)
+
+    # if documents in public comment have to be downloaded
+    # IHE Technical Framework Documents for Public Comment
+    if args.comment:
+        sy.load_ihe_page(IHE_COMMENT_URL, domains)
+
+    sy.display_available_docs()
 
     # sync with local directory
     sy.sync_all(domains)
