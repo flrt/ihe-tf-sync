@@ -7,7 +7,7 @@
 """
 
 __author__ = "Frederic Laurent"
-__version__ = "1.0"
+__version__ = "1.1"
 __copyright__ = "Copyright 2018, Frederic Laurent"
 __license__ = "MIT"
 
@@ -15,10 +15,13 @@ __license__ = "MIT"
 import os
 import os.path
 import sys
-import requests
+from pathlib import Path
 import json
 import argparse
 import datetime
+import locale
+import copy
+import requests
 from bs4 import BeautifulSoup
 import helpers
 
@@ -28,7 +31,7 @@ IHE_COMMENT_URL = f"{IHE_URL}/resources/public_comment/"
 DATA_ROOTDIR = "data"
 DOC_INFO_FILENAME = "docs.json"
 GENERAL_INFO_FILENAME = "infos.txt"
-
+META_TAG = "__meta__"
 
 class Synchro:
     def __init__(self, outputdir, refdoc={}):
@@ -39,11 +42,56 @@ class Synchro:
         :param dict refdoc: dictionnary containing reference
             configuration (previous)
         """
+        locale.setlocale(locale.LC_ALL, 'en_US.utf8')
+
         self.refdoc = refdoc
         self.doc = {}
         self.outputdir = outputdir
+        self.last_check = None
+        self.domain_filter = []
+        self.public_comment = False
+        self.get_meta()
 
-    def get_infos(self, title, href, domain_filter):
+    def get_all_domains(self):
+        if self.doc:
+            return list(self.doc.keys())
+        elif self.refdoc:
+            return list(self.refdoc.keys())
+        else:
+            return ['TF','PAT','CARD','DENT','ENDO','EYECARE',
+                'ITI','SUPPL','LAB','PALM','PCC','PHDSC','PCD',
+                'PHARMACY','QRPH','QUALITY','RO','RAD']
+
+    def get_meta(self):
+        if self.refdoc:
+            if META_TAG in self.refdoc:
+                self.last_check = datetime.datetime.strptime(self.refdoc[META_TAG]["last_check"],
+                    "%Y-%m-%dT%H:%M:%S.%f")
+                self.domain_filter = self.refdoc[META_TAG]["domains"]
+                self.public_comment = self.refdoc[META_TAG]["public_comment"]
+
+                del self.refdoc[META_TAG]
+            else:
+                # config not explicit, guess it
+                ddocs=[list(filter(lambda x: "etag" in x, v.values())) for k,v in self.refdoc.items()]
+                domains = set()
+
+                # iterate through downloaded docs (ddocs = list by domain)
+                for doclist in ddocs:
+                    for doc in doclist:
+                        domains.add(doc['domain'])
+
+                        parsed=None
+                        try:
+                            parsed = datetime.datetime.strptime(str(doc['last-modified']),'%a, %d %b %Y %H:%M:%S %Z')
+                            if (self.last_check and parsed < self.last_check) or self.last_check is None:
+                                self.last_check = parsed
+                        except:
+                            pass
+                
+                self.domain_filter=list(domains)
+              
+    def get_infos(self, title, href, doc_class):
         """
         get infos on document via URL
         retrieve domain name (e.g. RAD, ITI, etc.)
@@ -51,7 +99,6 @@ class Synchro:
 
         :param str title: Title of the document
         :param str href: URL of the document
-        :param list domain_filter: list of domain to take into account
         :return dict: dict with informations about the resource
         """
 
@@ -66,42 +113,64 @@ class Synchro:
         # keep RAD, ITI even if it's labelled RAD-TF
         # e.g. keep first part of the domain name
 
-        docinfo = {
+        return {
             "domain": parts[0].upper().split("-")[0],
             "typedoc": parts[1],
             "filename": docname,
             "href": _href,
             "title": title,
+            "class": doc_class
         }
 
-        if not domain_filter or (domain_filter and docinfo["domain"] in domain_filter):
+    def get_document_characteristics(self, doc):
+        """
+        get infos on document by making an HEAD request to get meta data on document (size, etag, etc.)
+
+        :param dict doc: Title of the document
+        :param str href: URL of the document
+        :return dict: dict with informations about the resource
+        """
+
+        if doc["domain"] in self.domain_filter:
             print(".", end="", flush=True)
             # get more info with a HEAD request
             try:
-                headreq = requests.head(_href)
+                headreq = requests.head(doc['href'])
 
                 if headreq.status_code == 200:
-                    docinfo["last-modified"] = headreq.headers["Last-Modified"]
-                    docinfo["size"] = int(headreq.headers["Content-Length"])
-                    docinfo["etag"] = headreq.headers["Etag"]
+                    doc["last-modified"] = headreq.headers["Last-Modified"]
+                    doc["size"] = int(headreq.headers["Content-Length"])
+                    doc["etag"] = headreq.headers["Etag"]
                 else:
-                    sys.stderr.write(f"Error {headreq.status_code} - URL={_href}\n")
+                    sys.stderr.write(f"Error {headreq.status_code} - URL={doc['href']}\n")
             except Exception as ex:
-                sys.stderr.writelines([f"Error HEAD request {_href}", str(ex), "\n"])
+                sys.stderr.writelines([f"Error HEAD request {doc['href']}", str(ex), "\n"])
 
-        return docinfo
+        return doc
 
-    def load_ihe_page(self, webpage=IHE_TF_URL, domain_filter=None):
+    def doc_cartography(self):
+        """
+        Load IHE html pages 
+            Technical Framework
+            Public comments if set
+        """
+
+        self.load_ihe_page(IHE_TF_URL)
+        if self.public_comment:
+            self.load_ihe_page(IHE_COMMENT_URL)
+        self.last_check = datetime.datetime.now().isoformat()
+
+    def load_ihe_page(self, webpage=IHE_TF_URL):
         """
         Load IHE html page
         Find documents
         Classify them
-
-        :param list domain_filter: list of domain to take into account
         """
 
         unsorted_docs = {}
         req = requests.get(webpage)
+        doc_class = webpage.split('/')[-2]
+
         if req.status_code == 200:
             soup = BeautifulSoup(req.text, "html5lib")
             links = list(filter(lambda x: x.get("href"), soup.find_all("a")))
@@ -109,11 +178,12 @@ class Synchro:
 
             print("Get information about documents")
             for link in pdf_list:
-                docinfo = self.get_infos(link.text, link.get("href"), domain_filter)
+                docinfo = self.get_infos(link.text, link.get("href"), doc_class)
                 unsorted_docs[docinfo["filename"]] = docinfo
-        print(f"\n{len(unsorted_docs)} documents found in IHE website : {webpage.split('/')[-2]}")
+        print(f"\n{len(unsorted_docs)} documents found in IHE website : {doc_class}")
         self.classify(unsorted_docs)
 
+        
     def display_available_docs(self):
         """
         Display how many documents are available in each domain.
@@ -152,7 +222,12 @@ class Synchro:
             if not len(self.doc[k]):
                 del self.doc[k]
 
-    def save_infos(self, domains):
+    def save(self, filename):
+        sdoc = copy.deepcopy(self.doc)
+        sdoc[META_TAG]=dict(last_check=self.last_check, public_comment=self.public_comment, domains=self.domain_filter)
+        helpers.save_json(filename, sdoc)
+
+    def save_infos(self):
         """
         Save global informations about IHE documents
 
@@ -165,8 +240,8 @@ class Synchro:
         infofn = os.path.join(self.outputdir, GENERAL_INFO_FILENAME)
         with open(infofn, "w") as fout:
             fout.write(f"Last checked : {datetime.datetime.now().isoformat()}\n")
-            if domains:
-                fout.write(f"Checked {','.join(domains)} domains.\n\n")
+            if self.domain_filter:
+                fout.write(f"Checked {','.join(self.domain_filter)} domains.\n\n")
             for d, v in self.doc.items():
                 # produce TOC for the current domain
                 fout.write(f"domain {d} : {len(v)} documents\n")
@@ -191,33 +266,33 @@ class Synchro:
             and self.doc[domain][keydoc]["size"] != self.refdoc[domain][keydoc]["size"]
         )
 
-    def sync_all(self, domain_filter=None):
-        """
+    def prepare_sync(self):
+        for domain, docs in self.doc.items():
+            [self.get_document_characteristics(doc) for doc in docs.values()]
 
-        Sync documents : 
-        - suppress all documents that are obsolete : not concerned aka not in domain_filter
-        - test if a new document has to be download : new document available or new version of the document
+        to_del = []
+        to_download = []
 
-        :param list domain_filter: list of domain to take into account
-        """
-        print("\nClean documents not in sync...")
+        # if more recent doc repo has not been synchronized, copy the reference one (the last one)
+        if len(self.doc.keys())==0:
+            self.doc = copy.deepcopy(self.refdoc)
+
         # looking for obsolete documents
         for domain, docs in self.refdoc.items():
             for keydoc, docinfo in self.refdoc[domain].items():
                 if "etag" in docinfo:
                     # already downloaded
 
-                    if (
+                    if (docinfo['domain'] not in self.domain_filter
+                        or
                         keydoc not in self.doc[domain]
                         or "etag" not in self.doc[domain][keydoc]
                     ):
-                        print(f"Obsolete document {keydoc} found: delete it...")
-                        self.delete(docinfo)
+                        to_del.append(docinfo)
 
         # looking for new documents
         for domain, docs in self.doc.items():
-            if domain_filter is None or domain in domain_filter:
-                print(f"\nSyncing {domain} domain...")
+            if domain in self.domain_filter:
                 # domain to sync
                 for keydoc, docinfo in self.doc[domain].items():
                     if domain not in self.refdoc:
@@ -226,8 +301,29 @@ class Synchro:
                     if self.is_different(domain, keydoc) or not self.check_local(
                         docinfo
                     ):
-                        print(f"Newer document {keydoc} found: download it...")
-                        self.download(docinfo)
+                        to_download.append(docinfo)
+        return to_del, to_download
+
+    def sync_all(self, confirm=True):
+        """
+
+        Sync documents : 
+        - suppress all documents that are obsolete : not concerned aka not in domain_filter
+        - test if a new document has to be download : new document available or new version of the document
+
+        """
+        to_del, to_download = self.prepare_sync()
+
+        print("\nClean documents not in sync...")
+        for doc in to_del:
+            print(f"Obsolete document {doc['filename']} found: delete it...")
+            if confirm:
+                self.delete(doc)
+
+        for doc in to_download:
+            print(f"Newer document {doc['filename']} found: download it...")
+            if confirm:
+                self.download(doc)
 
     def document_path(self, docinfo):
         """
@@ -305,51 +401,58 @@ def main():
     parser.add_argument(
         "--output",
         help="output directory in wich the documents will be downloaded",
-        default="documents",
+        default=str(Path(Path.home(), 'ihe_documents')),
     )
     parser.add_argument(
         "--confdir",
         help="directory containing the meta data about the documents",
-        default="conf",
+        default=str(Path(Path.home(), '.ihe-sync')),
     )
     parser.add_argument(
         "--comment",
         help="get documents in public comments",
         action="store_true"
     )
-    parser.add_argument("--domain", help="specify domain(s)", default=None)
+    parser.add_argument(
+        "--nosync",
+        help="skip the download step",
+        action="store_true"
+    )
+    parser.add_argument("--domain", help="specify domain(s)", default='')
     args = parser.parse_args()
 
-    domains = None
-    if args.domain:
-        domains = args.domain.split(",")
-
-    confdir = os.path.join(DATA_ROOTDIR, args.confdir)
-    if not os.path.exists(confdir):
-        os.makedirs(confdir)
-    outputdir = os.path.join(DATA_ROOTDIR, args.output)
+    if not os.path.exists(args.confdir):
+        os.makedirs(args.confdir)
 
     # Load previous configuration if presen
-    docfilename = os.path.join(confdir, DOC_INFO_FILENAME)
+    docfilename = os.path.join(args.confdir, DOC_INFO_FILENAME)
     previous_docs = helpers.load_json(docfilename)
 
-    sy = Synchro(outputdir, previous_docs)
-    # find all available documents
-    sy.load_ihe_page(IHE_TF_URL, domains)
+    sy = Synchro(args.output, previous_docs)
 
     # if documents in public comment have to be downloaded
     # IHE Technical Framework Documents for Public Comment
     if args.comment:
-        sy.load_ihe_page(IHE_COMMENT_URL, domains)
+        sy.public_comment = True
+    
+    # find all available documents
+    sy.doc_cartography()
+
+    # define domains to take into account
+    # ALL means all domains
+    if args.domain=='ALL':
+        sy.domain_filter = sy.get_all_domains()
+    else:
+        sy.domain_filter = args.domain.split(",") if len(args.domain)>0 else []
 
     sy.display_available_docs()
 
     # sync with local directory
-    sy.sync_all(domains)
-
+    sy.sync_all(confirm=not args.nosync)
+ 
     # save new data
-    sy.save_infos(domains)
-    helpers.save_json(docfilename, sy.doc)
+    sy.save_infos()
+    sy.save(docfilename)
 
 
 if __name__ == "__main__":
