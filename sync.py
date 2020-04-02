@@ -31,10 +31,12 @@ IHE_COMMENT_URL = f"{IHE_URL}/resources/public_comment/"
 DATA_ROOTDIR = "data"
 DOC_INFO_FILENAME = "docs.json"
 GENERAL_INFO_FILENAME = "infos.txt"
+DEFAULT_CONF_DIR = Path.home() / '.ihe-sync'
+DEFAULT_DOC_DIR = Path.home() / 'Documents' / 'ihe-documents'
 META_TAG = "__meta__"
 
 class Synchro:
-    def __init__(self, outputdir, refdoc={}):
+    def __init__(self, outputdir, configdir, refdoc={}):
         """
         Constructor
 
@@ -47,10 +49,22 @@ class Synchro:
         self.refdoc = refdoc
         self.doc = {}
         self.outputdir = outputdir
+        self.configdir = configdir
         self.last_check = None
         self.domain_filter = []
         self.public_comment = False
+        
+
+    def load_configuration(self):
+        # Load previous configuration if presen
+        docfilename = os.path.join(self.configdir, DOC_INFO_FILENAME)
+        self.refdoc = helpers.load_json(docfilename)
         self.get_meta()
+
+    def save_configuration(self):
+        docfilename = os.path.join(self.configdir, DOC_INFO_FILENAME)
+        print(docfilename)
+        self.save(docfilename)
 
     def get_all_domains(self):
         if self.doc:
@@ -69,8 +83,14 @@ class Synchro:
                     "%Y-%m-%dT%H:%M:%S.%f")
                 self.domain_filter = self.refdoc[META_TAG]["domains"]
                 self.public_comment = self.refdoc[META_TAG]["public_comment"]
+                if "outputdir" in self.refdoc[META_TAG]:
+                    self.outputdir = self.refdoc[META_TAG]["outputdir"]
+                else:
+                    self.outputdir = str(DEFAULT_DOC_DIR)
 
                 del self.refdoc[META_TAG]
+                print(self.refdoc.keys())
+
             else:
                 # config not explicit, guess it
                 ddocs=[list(filter(lambda x: "etag" in x, v.values())) for k,v in self.refdoc.items()]
@@ -158,7 +178,8 @@ class Synchro:
         self.load_ihe_page(IHE_TF_URL)
         if self.public_comment:
             self.load_ihe_page(IHE_COMMENT_URL)
-        self.last_check = datetime.datetime.now().isoformat()
+        #self.last_check = datetime.datetime.now().isoformat()
+        self.last_check = datetime.datetime.now()
 
     def load_ihe_page(self, webpage=IHE_TF_URL):
         """
@@ -224,7 +245,8 @@ class Synchro:
 
     def save(self, filename):
         sdoc = copy.deepcopy(self.doc)
-        sdoc[META_TAG]=dict(last_check=self.last_check, public_comment=self.public_comment, domains=self.domain_filter)
+        sdoc[META_TAG]=dict(last_check=self.last_check, public_comment=self.public_comment, 
+        domains=self.domain_filter, outputdir=self.outputdir)
         helpers.save_json(filename, sdoc)
 
     def save_infos(self):
@@ -401,12 +423,12 @@ def main():
     parser.add_argument(
         "--output",
         help="output directory in wich the documents will be downloaded",
-        default=str(Path(Path.home(), 'ihe_documents')),
+        default=str(DEFAULT_DOC_DIR),
     )
     parser.add_argument(
         "--confdir",
         help="directory containing the meta data about the documents",
-        default=str(Path(Path.home(), '.ihe-sync')),
+        default=str(DEFAULT_CONF_DIR),
     )
     parser.add_argument(
         "--comment",
@@ -425,10 +447,11 @@ def main():
         os.makedirs(args.confdir)
 
     # Load previous configuration if presen
-    docfilename = os.path.join(args.confdir, DOC_INFO_FILENAME)
-    previous_docs = helpers.load_json(docfilename)
+    #docfilename = os.path.join(args.confdir, DOC_INFO_FILENAME)
+    #previous_docs = helpers.load_json(docfilename)
 
-    sy = Synchro(args.output, previous_docs)
+    sy = Synchro(args.output, args.confdir, {})
+    sy.load_configuration()
 
     # if documents in public comment have to be downloaded
     # IHE Technical Framework Documents for Public Comment
@@ -452,7 +475,7 @@ def main():
  
     # save new data
     sy.save_infos()
-    sy.save(docfilename)
+    sy.save_configuration()
 
 
 if __name__ == "__main__":

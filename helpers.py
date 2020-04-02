@@ -15,10 +15,10 @@ import os.path
 import json
 import sys
 from json.decoder import JSONDecodeError
+from datetime import datetime, date
 import io
 import requests
 import shutil
-
 
 def save_json(filename, data):
     bdir = os.path.dirname(filename)
@@ -26,8 +26,7 @@ def save_json(filename, data):
         os.makedirs(bdir)
 
     with io.open(filename, "w") as fout:
-        fout.write(json.dumps(data, sort_keys=True, indent=4))
-
+        fout.write(json.dumps(data, sort_keys=True, indent=4, default=json_encoder))
 
 def load_json(filename):
     """
@@ -52,7 +51,6 @@ def load_json(filename):
                 sys.stderr.write("load_json_config JSONdecode :%s" % msg_j)
     return data
 
-
 def download(url, filename):
     """
         Telechargement de l'URL dans le fichier destination
@@ -67,3 +65,10 @@ def download(url, filename):
     except Exception as ex:
         sys.stderr.writelines([f"Error while downloading {url}", str(ex), "\n"])
     return filename
+
+def json_encoder(obj):
+    """JSON encoder for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
