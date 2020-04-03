@@ -66,6 +66,12 @@ class Synchro:
         print(docfilename)
         self.save(docfilename)
 
+    def duplicate_docs(self, source_ref=True):
+        if source_ref:
+            self.doc = copy.deepcopy(self.refdoc)
+        else:
+            self.refdoc = copy.deepcopy(self.doc)
+
     def get_all_domains(self):
         if self.doc:
             return list(self.doc.keys())
@@ -178,7 +184,6 @@ class Synchro:
         self.load_ihe_page(IHE_TF_URL)
         if self.public_comment:
             self.load_ihe_page(IHE_COMMENT_URL)
-        #self.last_check = datetime.datetime.now().isoformat()
         self.last_check = datetime.datetime.now()
 
     def load_ihe_page(self, webpage=IHE_TF_URL):
