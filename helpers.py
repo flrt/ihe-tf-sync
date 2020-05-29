@@ -19,6 +19,7 @@ from datetime import datetime, date
 import io
 import requests
 import shutil
+import pathlib
 
 def save_json(filename, data):
     bdir = os.path.dirname(filename)
@@ -71,4 +72,7 @@ def json_encoder(obj):
 
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
+    if isinstance(obj, pathlib.Path):
+        return str(obj)
+
+    raise json.JSONEncoder.default(obj)
