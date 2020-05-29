@@ -1,0 +1,3 @@
+reuests
+beautifoulsoup4
+html5lib
