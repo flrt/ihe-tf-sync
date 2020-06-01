@@ -3,6 +3,7 @@ from PyQt5.QtCore import pyqtSlot, QThreadPool
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 import sys
+import os
 
 import config
 import helpers
@@ -225,6 +226,8 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
 
 
 if __name__ == '__main__':
+    if not os.path.exists(sync.DEFAULT_CONF_DIR):
+        os.makedirs(sync.DEFAULT_CONF_DIR)
     logging.basicConfig(filename=str(sync.DEFAULT_CONF_DIR / 'ihe-sync.log'), level=logging.INFO)
     app = QtWidgets.QApplication(sys.argv)
     conf = config.Configuration()
