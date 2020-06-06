@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
-from config import Configuration
+from session import Context
 
 import logging
 
@@ -27,16 +27,16 @@ class PrepareWorker(BasicWorker):
         super().__init__(model)
 
     def doc_count(self):
-        return len(self.model.sy.get_document_tocheck_list())
+        return len(self.model.sync.get_document_tocheck_list())
 
     @pyqtSlot()
     def run(self):
-        doclist = self.model.sy.get_document_tocheck_list()
+        doclist = self.model.sync.get_document_tocheck_list()
 
         idx = 0
         while (idx < len(doclist)) and self.aborted is False:
-            self.model.sy.get_document_characteristics(doclist[idx])
-            self.signals.progress.emit((idx + 1, doclist[idx]))
+            self.model.sync.get_document_characteristics(doclist[idx])
+            self.signals.progress.emit((idx + 1, '', doclist[idx]))
             idx += 1
         if self.aborted is False:
             self.signals.finished.emit()
@@ -54,6 +54,11 @@ class SyncWorker(BasicWorker):
     @pyqtSlot()
     def run(self):
         self.logger.info("\nWorker : Clean documents not in sync...")
+        self.logger.info("TO DOWN")
+        self.logger.info(self.model.infos['to_download'])
+        self.logger.info("TO DEL")
+        self.logger.info(self.model.infos['to_del'])
+
         idx = 0
         while (idx < len(self.model.infos['to_del'])) and self.aborted is False:
             self.logger.info(f"W Obsolete document {self.model.infos['to_del'][idx]['filename']} found: delete it...")
@@ -61,9 +66,10 @@ class SyncWorker(BasicWorker):
             self.signals.progress.emit((idx + 1, 'DEL', self.model.infos['to_del'][idx]))
             idx += 1
 
+        idx = 0
         while (idx < len(self.model.infos['to_download'])) and self.aborted is False:
-            self.logger.info(f"W Newer document {self.model.infos['to_download'][idx]['filename']}  found: download it...")
-            self.model.sync.download(self.model.infos['to_download'][idx]['filename'])
+            self.logger.info(f"W Newer document {self.model.infos['to_download'][idx]}  found: download it...")
+            self.model.sync.download(self.model.infos['to_download'][idx])
             self.signals.progress.emit((idx + 1, 'DOWN', self.model.infos['to_download'][idx]))
             idx += 1
 

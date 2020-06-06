@@ -2,13 +2,13 @@ import sync
 import os.path
 import logging
 
-class Configuration:
+class Context:
     def __init__(self):
         self.logger = logging.getLogger()
         self.doc_directory = sync.DEFAULT_DOC_DIR
         self.conf_directory = sync.DEFAULT_CONF_DIR
         self.conf_file = sync.DOC_INFO_FILENAME
-        self.sy = None
+        self.sync = None
         self.domains = []
         self.initial_domains = []
         self.selected_domains = []
@@ -29,41 +29,43 @@ class Configuration:
         if not (os.path.exists(self.conf_directory)):
             os.mkdir(self.conf_directory)
 
-        self.sy = sync.Synchro(self.doc_directory, self.conf_directory, conf)
-        self.sy.load_configuration()
-        self.initial_domains = self.sy.domain_filter[:]
-        self.sy.doc_cartography()
+        self.sync = sync.Synchro(self.doc_directory, self.conf_directory, conf)
+        self.sync.load_configuration()
+        self.initial_domains = self.sync.domain_filter[:]
+        self.logger.info(f"Initial domains : {self.initial_domains}")
+        self.sync.doc_cartography()
 
-        if len(self.sy.refdoc.keys()) < 2:
-            self.sy.duplicate_docs(source_ref=False)
+        # if no previous context exists, copy the current one
+        if len(self.sync.refdoc.keys()) < 2:
+            self.sync.duplicate_docs(source_ref=False)
         else:
             self.no_config_file = False
-        if len(self.sy.doc.keys()) < 2:
-            self.sy.duplicate_docs(source_ref=True)
+        if len(self.sync.doc.keys()) < 2:
+            self.sync.duplicate_docs(source_ref=True)
 
         # scan local directory to get unreferenced documents
-        self.local_file_count_ondisk = self.sy.scan_local_dir()
+        self.local_file_count_ondisk = self.sync.scan_local_dir()
 
-        counts = [len(list(v.values())) for k, v in self.sy.refdoc.items()]
+        counts = [len(list(v.values())) for k, v in self.sync.refdoc.items()]
         self.file_count = sum(counts)
 
-        counts = [len(list(filter(lambda x: "size" in x, v.values()))) for k, v in self.sy.refdoc.items()]
+        counts = [len(list(filter(lambda x: "size" in x, v.values()))) for k, v in self.sync.refdoc.items()]
         self.local_file_count = sum(counts)
 
         # build domain list. From reference map (saved) + remote map
-        self.domains = self.domains_info(self.sy.refdoc)
+        self.domains = self.domains_info(self.sync.refdoc)
 
         ref_domains = [x['name'] for x in self.domains]
 
         # search new domain in remote map
-        for dom in self.domains_info(self.sy.doc):
+        for dom in self.domains_info(self.sync.doc):
             if dom['name'] not in ref_domains:
                 self.domains.append(dom)
 
     def check_remote(self):
-        self.sy.doc_cartography()
+        self.sync.doc_cartography()
 
-        counts = [len(v) for k, v in self.sy.doc.items()]
+        counts = [len(v) for k, v in self.sync.doc.items()]
         self.file_count = sum(counts)
 
     def domains_info(self, conf):
@@ -86,8 +88,8 @@ class Configuration:
         self.log()
 
         self.infos = dict(old_domain=self.initial_domains[:], new_domain=domains[:])
-        self.sy.domain_filter = domains
-        self.infos['to_del'], self.infos['to_download'] = self.sy.prepare_sync(remote_check=False)
+        self.sync.domain_filter = domains
+        self.infos['to_del'], self.infos['to_download'] = self.sync.prepare_sync(remote_check=False)
 
         self.logger.info(f'sync -> {self.infos}')
         #        helpers.save_json("/tmp/refdoc_sync2.conf", self.sy.refdoc)
@@ -98,7 +100,7 @@ class Configuration:
 
 
     def revert_sync(self):
-        self.sy.domain_filter = self.initial_domains
+        self.sync.domain_filter = self.initial_domains
         self.log()
 
     def confirm_sync(self):

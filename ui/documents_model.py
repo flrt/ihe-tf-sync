@@ -12,7 +12,7 @@ class DocumentsModel(QAbstractTableModel):
         self.logger = logging.getLogger()
 
         self.docs = data
-        self.headers = ['Domain', 'Downloaded', 'Total', 'Title']
+        self.headers = ['Domain', 'Local', 'Total', 'Title']
         self.datakeys = ['domain', 'down', 'total', 'title']
 
     def checked(self) -> list:
