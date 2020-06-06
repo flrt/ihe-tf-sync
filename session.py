@@ -3,6 +3,14 @@ import os.path
 import logging
 
 class Context:
+    """
+    Context for the synchronization process
+
+    2 scopes :
+    - initial : read from the local configuration file (preceding options)
+    - current : new domains to synchronise
+
+    """
     def __init__(self):
         self.logger = logging.getLogger()
         self.doc_directory = sync.DEFAULT_DOC_DIR
@@ -85,17 +93,12 @@ class Context:
         # helpers.save_json("/tmp/doc_sync.conf", self.sy.doc)
         self.selected_domains = domains
 
-        self.log()
-
         self.infos = dict(old_domain=self.initial_domains[:], new_domain=domains[:])
         self.sync.domain_filter = domains
         self.infos['to_del'], self.infos['to_download'] = self.sync.prepare_sync(remote_check=False)
 
-        self.logger.info(f'sync -> {self.infos}')
-        #        helpers.save_json("/tmp/refdoc_sync2.conf", self.sy.refdoc)
-        #        helpers.save_json("/tmp/doc_sync2.conf", self.sy.doc)
-        [self.logger.info(f"-- {d['filename']}") for d in self.infos['to_del']]
-        [self.logger.info(f"++ {d['filename']}") for d in self.infos['to_download']]
+        self.log()
+
 
 
 
@@ -111,3 +114,8 @@ class Context:
         self.logger.info(f'sync - original domains {self.initial_domains} | '
               f'sync - selected domains {self.selected_domains}'
               )
+        self.logger.info(f'sync -> {self.infos}')
+        #        helpers.save_json("/tmp/refdoc_sync2.conf", self.sy.refdoc)
+        #        helpers.save_json("/tmp/doc_sync2.conf", self.sy.doc)
+        [self.logger.info(f"-- {d['filename']}") for d in self.infos['to_del']]
+        [self.logger.info(f"++ {d['filename']}") for d in self.infos['to_download']]

@@ -67,6 +67,10 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
             self.labelLastCheckDate.setText(self.context.sync.last_check.strftime("%Y-%m-%d %H:%M"))
 
     def refresh_domain_list(self):
+
+        self.logger.info('refresh_domain_list')
+        self.doc_model.log()
+
         self.labelDomainCountValue.setText(str(len(self.context.domains)))
 
         self.doc_model.set_documents(None)
@@ -156,6 +160,9 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
 
     @pyqtSlot()
     def on_synchronize_confirmed(self):
+        self.logger.info('on_synchronize_confirmed')
+        self.doc_model.log()
+
         self.context.sync.display_available_docs()
         sd = dialogs.ProgressSyncDialog(dialogs.ProgressSyncDialog.SYNC_INFO_TEXT, parent=self)
         worker = sync_worker.SyncWorker(self.context)

@@ -15,6 +15,10 @@ class DocumentsModel(QAbstractTableModel):
         self.headers = ['Domain', 'Local', 'Total', 'Title']
         self.datakeys = ['domain', 'down', 'total', 'title']
 
+    def log(self):
+        for d, i in enumerate(self.docs):
+            self.logger.info(f"{d[i]['domain']} = {d[i]['checked']}")
+
     def checked(self) -> list:
         return list(map(lambda doc: doc['domain'], filter(lambda d: d['checked'], self.docs)))
 
@@ -40,6 +44,7 @@ class DocumentsModel(QAbstractTableModel):
             return str(val)
         elif role == Qt.CheckStateRole:
             if index.column() == 0:
+                #self.logger.info(f"data {index.row()} = {self.docs[index.row()]['checked']} ")
                 return Qt.Checked if self.docs[index.row()]["checked"] else Qt.Unchecked
         return None
 
@@ -53,6 +58,7 @@ class DocumentsModel(QAbstractTableModel):
         if not index.isValid():
             return False
         if role == QtCore.Qt.CheckStateRole and index.column() == 0:
+            self.logger.info(f"setData {index.row()} = {self.docs[index.row()]['checked']} - value {value}")
             self.docs[index.row()]["checked"] = (value == QtCore.Qt.Checked)
             return True
         return False

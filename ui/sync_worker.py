@@ -12,7 +12,6 @@ class BasicSignals(QObject):
 class BasicWorker(QRunnable):
     def __init__(self, model):
         super().__init__()
-        #super(QRunnable, self).__init__()
         self.signals = BasicSignals()
         self.model = model
         self.aborted = False
@@ -44,7 +43,6 @@ class PrepareWorker(BasicWorker):
 
 class SyncWorker(BasicWorker):
     def __init__(self, model):
-        #super(BasicWorker, self).__init__(model)
         super().__init__(model)
         self.logger = logging.getLogger()
 
@@ -53,12 +51,6 @@ class SyncWorker(BasicWorker):
 
     @pyqtSlot()
     def run(self):
-        self.logger.info("\nWorker : Clean documents not in sync...")
-        self.logger.info("TO DOWN")
-        self.logger.info(self.model.infos['to_download'])
-        self.logger.info("TO DEL")
-        self.logger.info(self.model.infos['to_del'])
-
         idx = 0
         while (idx < len(self.model.infos['to_del'])) and self.aborted is False:
             self.logger.info(f"W Obsolete document {self.model.infos['to_del'][idx]['filename']} found: delete it...")
