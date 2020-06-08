@@ -447,6 +447,12 @@ class Synchro:
             # remove dir if empty
             if not len(os.listdir(dirname)):
                 os.removedirs(dirname)
+
+            # suppress metatags also : etag, last-modified, size
+            for key in ['etag', 'last-modified', 'size']:
+                if key in docinfo:
+                    del docinfo[key]
+
         except OSError as err:
             sys.stderr.writelines(
                 [f"Error while deleting {filename}\n", str(err), "\n"]

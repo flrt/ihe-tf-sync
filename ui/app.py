@@ -49,6 +49,7 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
     def main(self):
         self.refresh_configuration()
         self.refresh_counts()
+        self.refresh_domain_list()
         self.show()
 
         if self.context.local_file_count_ondisk != self.context.local_file_count:
@@ -98,7 +99,7 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
         self.refresh_last_checked()
         self.labelDocumentCountValue.setText(str(self.context.file_count))
         self.labelLocalFilesCountValue.setText(str(self.context.local_file_count))
-        self.refresh_domain_list()
+        #self.refresh_domain_list()
 
     @pyqtSlot()
     def on_textConfDir_textChanged(self):

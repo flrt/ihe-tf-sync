@@ -16,8 +16,8 @@ class DocumentsModel(QAbstractTableModel):
         self.datakeys = ['domain', 'down', 'total', 'title']
 
     def log(self):
-        for d, i in enumerate(self.docs):
-            self.logger.info(f"{d[i]['domain']} = {d[i]['checked']}")
+        for i, v in enumerate(self.docs):
+            self.logger.info(f"{v['domain']} = {v['checked']}")
 
     def checked(self) -> list:
         return list(map(lambda doc: doc['domain'], filter(lambda d: d['checked'], self.docs)))
