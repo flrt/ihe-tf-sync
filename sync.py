@@ -33,6 +33,8 @@ DOC_INFO_FILENAME = "docs.json"
 GENERAL_INFO_FILENAME = "infos.txt"
 DEFAULT_CONF_DIR = Path.home() / '.ihe-sync'
 DEFAULT_DOC_DIR = Path.home() / 'Documents' / 'ihe-documents'
+DEFAULT_LOG_FILENAME = "ihe-sync.log"
+DEFAULT_LOG_LEVEL = "INFO"
 META_TAG = "__meta__"
 
 
@@ -47,6 +49,8 @@ class Synchro:
         """
         locale.setlocale(locale.LC_ALL, 'en_US.utf8')
         self.logger = logging.getLogger()
+        self.log_filename = str(DEFAULT_CONF_DIR / DEFAULT_LOG_FILENAME)
+        self.log_level = DEFAULT_LOG_LEVEL
         self.refdoc = refdoc
         self.doc = {}
         self.outputdir = outputdir
@@ -55,11 +59,29 @@ class Synchro:
         self.domain_filter = []
         self.public_comment = False
 
+    def config_logging(self):
+        logging.basicConfig(filename=str(DEFAULT_CONF_DIR / self.log_filename),
+                            level=self.log_level)
+
+    def update_logger_config(self, level=None, filename=None):
+        if level is not None:
+            self.log_level=level
+        if filename is not None:
+            if logging.getLogger().hasHandlers():
+                for h in logging.getLogger().handlers:
+                    if isinstance(h, logging.FileHandler) and h.baseFilename.endswith(filename):
+                        logging.getLogger().removeHandler(h)
+            self.log_filename = filename
+        if level or filename:
+            self.config_logging()
+
+
     def load_configuration(self):
         # Load previous configuration if presen
         docfilename = os.path.join(self.configdir, DOC_INFO_FILENAME)
         self.refdoc = helpers.load_json(docfilename)
         self.get_meta()
+        self.config_logging()
 
     def save_configuration(self):
         docfilename = os.path.join(self.configdir, DOC_INFO_FILENAME)
@@ -93,6 +115,10 @@ class Synchro:
                     self.outputdir = self.refdoc[META_TAG]["outputdir"]
                 else:
                     self.outputdir = str(DEFAULT_DOC_DIR)
+                if "logfile" in self.refdoc[META_TAG]:
+                    self.log_filename = self.refdoc[META_TAG]["logfile"]
+                if "loglevel" in self.refdoc[META_TAG]:
+                    self.log_level = self.refdoc[META_TAG]["loglevel"]
 
                 del self.refdoc[META_TAG]
                 self.logger.info(self.refdoc.keys())
@@ -258,7 +284,8 @@ class Synchro:
     def save(self, filename):
         sdoc = copy.deepcopy(self.doc)
         sdoc[META_TAG] = dict(last_check=self.last_check, public_comment=self.public_comment,
-                              domains=self.domain_filter, outputdir=self.outputdir)
+                              domains=self.domain_filter, outputdir=self.outputdir,
+                              logfile=self.log_filename, loglevel=self.log_level)
         helpers.save_json(filename, sdoc)
 
     def save_infos(self):
@@ -449,9 +476,10 @@ class Synchro:
                 os.removedirs(dirname)
 
             # suppress metatags also : etag, last-modified, size
+            d = self.doc[docinfo['domain']][docinfo['filename']]
             for key in ['etag', 'last-modified', 'size']:
-                if key in docinfo:
-                    del docinfo[key]
+                if key in d:
+                    del d[key]
 
         except OSError as err:
             sys.stderr.writelines(

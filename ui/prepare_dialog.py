@@ -50,6 +50,7 @@ class Ui_PrepareDialog(object):
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     PrepareDialog = QtWidgets.QDialog()
     ui = Ui_PrepareDialog()

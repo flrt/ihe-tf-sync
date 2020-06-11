@@ -29,33 +29,45 @@ class SyncDialog(QtWidgets.QDialog, ui.sync_dialog.Ui_SyncDialog):
         txt = "<p>No domain to synchronize</p>"
 
         if len(self.new_domains) > 0:
-            newd = ', '.join(self.new_domains) if self.new_domains else '<i>none</i>'
-            oldd = ', '.join(self.old_domains) if self.old_domains else '<i>none</i>'
-            if len(set(self.old_domains) - set(self.new_domains)) > 0 \
-                    or len(set(self.new_domains) - set(self.old_domains)) > 0:
-                txt = (f'<p>Previous domains: <code style="color:blue">{oldd}</code>'
-                       f'<br/>New domains: <code style="color:green">{newd}</code></p>')
+            newd = ", ".join(self.new_domains) if self.new_domains else "<i>none</i>"
+            oldd = ", ".join(self.old_domains) if self.old_domains else "<i>none</i>"
+            if (
+                len(set(self.old_domains) - set(self.new_domains)) > 0
+                or len(set(self.new_domains) - set(self.old_domains)) > 0
+            ):
+                txt = (
+                    f'<p>Previous domains: <code style="color:blue">{oldd}</code>'
+                    f'<br/>New domains: <code style="color:green">{newd}</code></p>'
+                )
             else:
                 txt = f"<p>Keep domains {newd} synchronized</p>"
 
         addd = list(set(self.new_domains) - set(self.old_domains))
         if len(addd) > 0:
-            txt += '<p>Add {} to the synchronize process'.format(', '.join(addd))
+            txt += "<p>Add {} to the synchronize process".format(", ".join(addd))
         deld = list(set(self.old_domains) - set(self.new_domains))
         if len(deld) > 0:
-            txt += '<p>Delete {} to the synchronize process'.format(', '.join(deld))
+            txt += "<p>Delete {} to the synchronize process".format(", ".join(deld))
 
         self.textDomainBrowser.setText(txt)
 
-        txt = "Nothing to do :)" if len(self.new_docs) + len(self.old_domains) == 0 else ""
+        txt = (
+            "Nothing to do :)"
+            if len(self.new_docs) + len(self.old_domains) == 0
+            else ""
+        )
 
         if len(self.new_docs) > 0:
             txt += f"<h1>Download documents ({len(self.new_docs)}):</h1>"
-            txt += "<ul><li>{}</li></ul>".format("</li><li>".join(list(map(lambda x: x['filename'], self.new_docs))))
+            txt += "<ul><li>{}</li></ul>".format(
+                "</li><li>".join(list(map(lambda x: x["filename"], self.new_docs)))
+            )
 
         if len(self.old_docs) > 0:
             txt += f"<h1>Delete documents {len(self.old_docs)}:</h1>"
-            txt += "<ul><li>{}</li></ul>".format("</li><li>".join(list(map(lambda x: x['filename'], self.old_docs))))
+            txt += "<ul><li>{}</li></ul>".format(
+                "</li><li>".join(list(map(lambda x: x["filename"], self.old_docs)))
+            )
 
         self.textDocumentsBrowser.setText(txt)
 
@@ -98,7 +110,6 @@ class ProgressSyncDialog(QtWidgets.QDialog):
     REMOTE_INFO_TEXT = "Get remote informations about document "
     SYNC_INFO_TEXT = "Sync ! "
 
-
     def __init__(self, text, parent=None):
         super(ProgressSyncDialog, self).__init__(parent)
         self.ui = ui.progress_dialog.Ui_ProgressDialog()
@@ -123,5 +134,5 @@ class ProgressSyncDialog(QtWidgets.QDialog):
     def progress(self, data):
         index, action, doc = data
         self.ui.labelProgress.setText(f"{self.text} {action} {index}/{self.max_doc}")
-        self.ui.labelFilename.setText(doc['filename'])
+        self.ui.labelFilename.setText(doc["filename"])
         self.ui.progressBarPrepare.setValue(index)

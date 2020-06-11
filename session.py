@@ -1,6 +1,7 @@
-import sync
 import os.path
 import logging
+
+import sync
 
 class Context:
     """
@@ -54,11 +55,7 @@ class Context:
         # scan local directory to get unreferenced documents
         self.local_file_count_ondisk = self.sync.scan_local_dir()
 
-        counts = [len(list(v.values())) for k, v in self.sync.refdoc.items()]
-        self.file_count = sum(counts)
-
-        counts = [len(list(filter(lambda x: "size" in x, v.values()))) for k, v in self.sync.refdoc.items()]
-        self.local_file_count = sum(counts)
+        self.refresh_counts_ref()
 
         # build domain list. From reference map (saved) + remote map
         self.domains = self.domains_info(self.sync.refdoc)
@@ -69,6 +66,19 @@ class Context:
         for dom in self.domains_info(self.sync.doc):
             if dom['name'] not in ref_domains:
                 self.domains.append(dom)
+
+    def refresh_counts_ref(self):
+        self.refresh_counts(self.sync.refdoc)
+
+    def refresh_counts_current(self):
+        self.refresh_counts(self.sync.doc)
+
+    def refresh_counts(self, src_doc):
+        counts = [len(list(v.values())) for k, v in src_doc.items()]
+        self.file_count = sum(counts)
+
+        counts = [len(list(filter(lambda x: "size" in x, v.values()))) for k, v in src_doc.items()]
+        self.local_file_count = sum(counts)
 
     def check_remote(self):
         self.sync.doc_cartography()
@@ -89,26 +99,16 @@ class Context:
         return dom
 
     def prepare_sync(self, domains=[]):
-        # helpers.save_json("/tmp/refdoc_sync.conf", self.sy.refdoc)
-        # helpers.save_json("/tmp/doc_sync.conf", self.sy.doc)
         self.selected_domains = domains
-
         self.infos = dict(old_domain=self.initial_domains[:], new_domain=domains[:])
         self.sync.domain_filter = domains
         self.infos['to_del'], self.infos['to_download'] = self.sync.prepare_sync(remote_check=False)
 
-        self.log()
-
-
-
-
     def revert_sync(self):
         self.sync.domain_filter = self.initial_domains
-        self.log()
 
     def confirm_sync(self):
         self.initial_domains = self.selected_domains[:]
-        self.log()
 
     def log(self):
         self.logger.info(f'sync - original domains {self.initial_domains} | '
@@ -119,3 +119,6 @@ class Context:
         #        helpers.save_json("/tmp/doc_sync2.conf", self.sy.doc)
         [self.logger.info(f"-- {d['filename']}") for d in self.infos['to_del']]
         [self.logger.info(f"++ {d['filename']}") for d in self.infos['to_download']]
+
+    def local_path_domain(self, domain):
+        return os.path.join(self.sync.outputdir, domain)
