@@ -13,7 +13,8 @@ import session
 import helpers
 import ui.ihesync_app
 import ui.prepare_dialog
-from ui.dialogs import SyncDialog
+#import ui.about_dialog
+from ui.dialogs import SyncDialog, AboutDialog
 from ui import documents_model
 from ui import sync_worker, dialogs
 
@@ -130,6 +131,8 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
     def refresh_configuration(self):
         self.textConfDir.setText(str(self.context.conf_directory))
         self.textDocDir.setText(str(self.context.doc_directory))
+        self.newDocsGroupBox.setVisible(False)
+
         self.textLoggingFilename.setText(str(self.context.sync.log_filename))
         rad = dict(INFO=self.infoRadioButton, ERROR=self.errorRadioButton, DEBUG=self.debugRadioButton)
         if self.context.sync.log_level in rad:
@@ -141,6 +144,11 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
         self.labelDocumentCountValue.setText(str(self.context.file_count))
         self.labelLocalFilesCountValue.setText(str(self.context.local_file_count))
         # self.refresh_domain_list()
+
+    @pyqtSlot()
+    def on_aboutPushButton_clicked(self):
+        dlg = dialogs.AboutDialog(self)
+        dlg.main()
 
     @pyqtSlot()
     def on_infoRadioButton_clicked(self):

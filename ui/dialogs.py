@@ -3,7 +3,7 @@ from PyQt5.QtCore import pyqtSlot
 
 import ui.sync_dialog
 import ui.progress_dialog
-
+import ui.about_dialog
 
 class SyncDialog(QtWidgets.QDialog, ui.sync_dialog.Ui_SyncDialog):
     confirm_signal = QtCore.pyqtSignal()
@@ -136,3 +136,19 @@ class ProgressSyncDialog(QtWidgets.QDialog):
         self.ui.labelProgress.setText(f"{self.text} {action} {index}/{self.max_doc}")
         self.ui.labelFilename.setText(doc["filename"])
         self.ui.progressBarPrepare.setValue(index)
+
+
+class AboutDialog(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super(AboutDialog, self).__init__(parent)
+        self.ui = ui.about_dialog.Ui_Dialog()
+        self.ui.setupUi(self)
+        #self.ui.softTextEdit.setOpenExternalLinks(True)
+        fd = QtCore.QFile(":/txt/about.html")
+        if fd.open(QtCore.QIODevice.ReadOnly | QtCore.QFile.Text):
+            text = QtCore.QTextStream(fd).readAll()
+        fd.close()
+        self.ui.aboutLabel.setText(text)
+
+    def main(self, worker=None):
+        self.show()

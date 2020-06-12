@@ -1,10 +1,16 @@
 <RCC>
   <qresource prefix="/images">
+    <file>img/info2.svg</file>
+    <file>img/sync.svg</file>
+    <file>img/info.svg</file>
     <file>img/delete.svg</file>
     <file>img/files.svg</file>
     <file>img/edit.svg</file>
     <file>img/change.svg</file>
     <file>img/folder.svg</file>
     <file>img/refresh.svg</file>
+  </qresource>
+  <qresource prefix="txt">
+    <file>about.html</file>
   </qresource>
 </RCC>
