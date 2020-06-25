@@ -57,9 +57,11 @@ class SyncWorker(BasicWorker):
             self.logger.info(
                 f"W Obsolete document {self.model.infos['to_del'][idx]['filename']} found: delete it..."
             )
-            self.model.sync.delete(self.model.infos["to_del"][idx])
+            success, error, filename = self.model.sync.delete(self.model.infos["to_del"][idx])
+            if not success:
+                self.logger.error(f"Worker error : {error}")
             self.signals.progress.emit(
-                (idx + 1, "DEL", self.model.infos["to_del"][idx])
+                (idx + 1, "Delete" if success else "Error", self.model.infos["to_del"][idx])
             )
             idx += 1
 
@@ -68,10 +70,10 @@ class SyncWorker(BasicWorker):
             self.logger.info(
                 f"W Newer document {self.model.infos['to_download'][idx]}  found: download it..."
             )
-            self.model.sync.download(self.model.infos["to_download"][idx])
-            self.signals.progress.emit(
-                (idx + 1, "DOWN", self.model.infos["to_download"][idx])
-            )
+            success, error, filename = self.model.sync.download(self.model.infos["to_download"][idx])
+            if not success:
+                self.logger.error("Worker error : {error}")
+            self.signals.progress.emit((idx + 1, "Download" if success else "Error", self.model.infos["to_download"][idx]))
             idx += 1
 
         if self.aborted is False:

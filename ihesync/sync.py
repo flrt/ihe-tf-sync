@@ -215,11 +215,11 @@ class Synchro:
             Technical Framework
             Public comments if set
         """
-
-        self.load_ihe_page(IHE_TF_URL)
+        retcode = self.load_ihe_page(IHE_TF_URL)
         if self.public_comment:
-            self.load_ihe_page(IHE_COMMENT_URL)
+            retcode &= self.load_ihe_page(IHE_COMMENT_URL)
         self.last_check = datetime.datetime.now()
+        return retcode
 
     def load_ihe_page(self, webpage=IHE_TF_URL):
         """
@@ -229,21 +229,29 @@ class Synchro:
         """
 
         unsorted_docs = {}
-        req = requests.get(webpage)
-        doc_class = webpage.split('/')[-2]
+        retcode = True
+        try:
+            req = requests.get(webpage)
+            doc_class = webpage.split('/')[-2]
 
-        if req.status_code == 200:
-            soup = BeautifulSoup(req.text, "html5lib")
-            links = list(filter(lambda x: x.get("href"), soup.find_all("a")))
-            pdf_list = list(filter(lambda x: x.get("href").endswith(".pdf"), links))
+            if req.status_code == 200:
+                soup = BeautifulSoup(req.text, "html5lib")
+                links = list(filter(lambda x: x.get("href"), soup.find_all("a")))
+                pdf_list = list(filter(lambda x: x.get("href").endswith(".pdf"), links))
 
-            self.logger.info("Get information about documents")
-            for link in pdf_list:
-                docinfo = self.get_infos(link.text, link.get("href"), doc_class)
-                unsorted_docs[docinfo["filename"]] = docinfo
-        self.logger.info(f"\n{len(unsorted_docs)} documents found in IHE website : {doc_class}")
-        self.classify(unsorted_docs)
-        self.logger.debug(f"IHE category keys {self.doc.keys()}")
+                self.logger.info("Get information about documents")
+                for link in pdf_list:
+                    docinfo = self.get_infos(link.text, link.get("href"), doc_class)
+                    unsorted_docs[docinfo["filename"]] = docinfo
+
+            self.logger.info(f"\n{len(unsorted_docs)} documents found in IHE website : {doc_class}")
+            self.classify(unsorted_docs)
+            self.logger.debug(f"IHE category keys {self.doc.keys()}")
+        except requests.exceptions.ConnectionError as conn_err:
+            self.logger.error(f"Error while loading remote IHE page {conn_err.errno}:{conn_err.strerror}")
+            retcode = False
+        return retcode
+
 
     def display_available_docs(self):
         """
@@ -438,7 +446,7 @@ class Synchro:
             if confirm:
                 self.download(doc)
 
-    def document_path(self, docinfo):
+    def document_path(self, docinfo, createpath=False):
         """
         Build the path of the document, stored locally
 
@@ -447,7 +455,7 @@ class Synchro:
 
         rootdir = os.path.join(self.outputdir, docinfo["domain"])
         self.logger.debug(f"document path {rootdir} [{docinfo['filename']}]")
-        if not os.path.exists(rootdir):
+        if not os.path.exists(rootdir) and createpath:
             os.makedirs(rootdir)
 
         return os.path.join(rootdir, docinfo["filename"])
@@ -462,7 +470,7 @@ class Synchro:
         """
 
         filename = self.document_path(docinfo)
-        helpers.download(docinfo["href"], filename)
+        return helpers.download(docinfo["href"], filename)
 
     def delete(self, docinfo):
         """
@@ -474,8 +482,10 @@ class Synchro:
         delete. delete the local file
         """
 
-        filename = self.document_path(docinfo)
+        filename = self.document_path(docinfo, createpath=True)
         dirname = os.path.dirname(filename)
+        sucess, error = True, ''
+
         try:
             os.remove(filename)
             # remove dir if empty
@@ -489,9 +499,10 @@ class Synchro:
                     del d[key]
 
         except OSError as err:
-            sys.stderr.writelines(
-                [f"Error while deleting {filename}\n", str(err), "\n"]
-            )
+            error = f"Error while deleting {filename} {str(err)}"
+            sucess = False
+
+        return sucess, error, filename
 
     def check_local(self, docinfo):
         """
@@ -538,7 +549,12 @@ class Synchro:
 
         """
         dirname = os.path.join(self.outputdir, domain)
-        return len(os.listdir(dirname))
+        if os.path.exists(dirname):
+            if os.path.isdir(dirname):
+                return len(os.listdir(dirname))
+            else:
+                self.logger.error(f"I/O Erreur {dirname} is a file, a directory was expected !")
+        return 0
 
 def main():
     """

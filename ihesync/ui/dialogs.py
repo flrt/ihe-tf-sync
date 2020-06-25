@@ -74,38 +74,6 @@ class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
 
         self.show()
 
-
-# class PrepareSyncDialog(QtWidgets.QDialog):
-#     # confirm_signal = QtCore.pyqtSignal(object)
-#     TEXT = "Get remote informations about document "
-#
-#     def __init__(self, parent=None):
-#         super(PrepareSyncDialog, self).__init__(parent)
-#         self.ui = ui.prepare_dialog.Ui_PrepareDialog()
-#         self.ui.setupUi(self)
-#         self.ui.labelPrepare.setText(PrepareSyncDialog.TEXT)
-#         self.ui.labelFilename.setText("")
-#         self.worker = None
-#         self.max_doc = 0
-#
-#     def main(self, worker=None):
-#         self.worker = worker
-#         self.worker.signals.progress.connect(self.progress_prepare)
-#         self.max_doc = self.worker.doc_count()
-#         self.ui.progressBarPrepare.setMaximum(self.max_doc)
-#         self.show()
-#
-#     @pyqtSlot()
-#     def on_abortButton_clicked(self):
-#         self.worker.abort()
-#
-#     def progress_prepare(self, data):
-#         index, doc = data
-#         self.ui.labelPrepare.setText(f"{PrepareSyncDialog.TEXT} {index}/{self.max_doc}")
-#         self.ui.labelFilename.setText(doc['filename'])
-#         self.ui.progressBarPrepare.setValue(index)
-
-
 class ProgressSyncDialog(QtWidgets.QDialog):
     # confirm_signal = QtCore.pyqtSignal(object)
     REMOTE_INFO_TEXT = "Get remote informations about document "

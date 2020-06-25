@@ -5,7 +5,7 @@ import webbrowser
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import pyqtSlot, QThreadPool
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QLabel, QFrame
 
 from ihesync import session
 from ihesync.ui import ihesync_app
@@ -48,6 +48,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             'Visit IHE Website : <a href="www.ihe.net">tech</a>'
         )
 
+        self.build_statusbar()
         self.label_ihewebsite.setOpenExternalLinks(True)
         self.threadpool = QThreadPool()
         self.threadpool.setMaxThreadCount(4)
@@ -63,10 +64,15 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.logger.info("Starts with %d threads" % self.threadpool.maxThreadCount())
 
     def main(self):
+        self.show()
+        conf_loaded = self.context.load_configuration()
+
+        if not conf_loaded:
+            self.change_status("Configuration loading error : check network")
+
         self.refresh_configuration()
         self.refresh_counts()
         self.refresh_domain_list()
-        self.show()
 
         if self.context.local_file_count_ondisk != self.context.local_file_count:
             msg = QMessageBox.about(
@@ -105,7 +111,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         domains = sorted(self.context.domains, key=lambda v: v["name"])
         data = []
         for domain in domains:
-            local_count=self.context.sync.count_local_files(domain["name"])
+            local_count = self.context.sync.count_local_files(domain["name"])
             data.append(
                 {
                     "checked": domain["selected"],
@@ -137,8 +143,29 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     def refresh_counts(self):
         self.refresh_last_checked()
         self.labelDocumentCountValue.setText(str(self.context.file_count))
-        self.labelLocalFilesCountValue.setText(str(self.context.local_file_count))
-        # self.refresh_domain_list()
+        self.labelLocalFilesCountValue.setText(str("{}/{}"
+                                                   .format(self.context.local_file_count_ondisk,
+                                                           self.context.local_file_count)))
+        self.refresh_domain_list()
+
+    def build_statusbar(self):
+        self.modifed_label = QLabel("Status: No change")
+        self.modifed_label.setStyleSheet('border: 0; color:  blue;')
+        self.statusBar().setStyleSheet('border: 0; background-color: #FFF8DC;')
+        self.statusBar().setStyleSheet("QStatusBar::item {border: none;}")
+        self.statusBar().addPermanentWidget(VLine())  # <---
+        self.statusBar().addPermanentWidget(self.modifed_label)
+
+    def change_status(self, msg=None, changed=None):
+        if changed:
+            self.changed = changed
+
+        self.modifed_label.setText("Status: Changed !" if self.changed else "Status: No change")
+
+        if msg:
+            self.statusbar.showMessage(msg, 3000)
+
+
 
     @pyqtSlot()
     def on_aboutPushButton_clicked(self):
@@ -159,7 +186,6 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
     @pyqtSlot()
     def on_changeLogPushButton_clicked(self):
-        print(self.textLoggingFilename.toPlainText())
         self.context.sync.update_logger_config(filename=self.textLoggingFilename.toPlainText())
 
     @pyqtSlot()
@@ -167,7 +193,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         try:
             os.remove(self.textLoggingFilename.toPlainText())
         except OSError as e:
-            print(f"Can't not remove {self.textLoggingFilename.toPlainText()} : {str(e)}")
+            self.logger.error(f"Can't remove {self.textLoggingFilename.toPlainText()} : {str(e)}")
 
     @pyqtSlot()
     def on_openLogPushButton_clicked(self):
@@ -190,7 +216,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             QFileDialog.getExistingDirectory(self, "Select Directory")
         )
         self.textConfDir.setText(self.context.conf_directory)
-        self.changed = True
+        self.change_status(changed=True)
 
     @pyqtSlot()
     def on_docSelectButton_clicked(self):
@@ -198,7 +224,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             QFileDialog.getExistingDirectory(self, "Select Directory")
         )
         self.textDocDir.setText(self.context.doc_directory)
-        self.changed = True
+        self.change_status(changed=True)
 
     @pyqtSlot()
     def on_reloadConfButton_clicked(self):
@@ -220,7 +246,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         sd.old_docs = self.context.infos["to_del"]
         sd.new_docs = self.context.infos["to_download"]
         if len(sd.old_domains) > 0 or len(sd.new_docs) > 0:
-            self.changed = True
+            self.change_status(changed=True)
         sd.main()
 
     @pyqtSlot()
@@ -259,6 +285,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
         self.context.confirm_sync()
         self.context.refresh_counts_current()
+        self.context.scan_local_dirs()
         self.refresh_counts()
 
     @pyqtSlot()
@@ -267,7 +294,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
     def closeEvent(self, event):
         # save new data
-        self.logger.info(f"Close - change ? {self.changed}")
+        self.logger.debug(f"Close - change ? {self.changed}")
         if self.changed or self.context.no_config_file:
             self.context.sync.save_infos()
             self.context.sync.save_configuration()
@@ -277,7 +304,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
     def open_documents_folder(self, index: QtCore.QModelIndex) -> None:
         docinfo = index.model().docs[index.row()]
-        if docinfo['link'] and index.column()==4:
+        if docinfo['link'] and index.column() == 4:
             dom = self.context.local_path_domain(docinfo['domain'])
             webbrowser.open_new(dom)
 
@@ -294,10 +321,16 @@ class OpenFolderDelegate(QtWidgets.QStyledItemDelegate):
             super().paint(painter, option, index)
 
 
+class VLine(QFrame):
+    # a simple VLine, like the one you get from designer
+    def __init__(self):
+        super(VLine, self).__init__()
+        self.setFrameShape(self.VLine|self.Sunken)
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     ctx = session.Context()
-    ctx.load_configuration()
+
     iheui = Ui(ctx)
     iheui.main()
     app.exec_()

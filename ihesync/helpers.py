@@ -58,14 +58,16 @@ def download(url, filename):
     :param url: URL a telecharger
     :param filename: fichier de destination
     """
+    success, error = True, ''
 
     try:
         req = requests.get(url, stream=True)
         with open(filename, "wb") as f:
             shutil.copyfileobj(req.raw, f)
     except Exception as ex:
-        sys.stderr.writelines([f"Error while downloading {url}", str(ex), "\n"])
-    return filename
+        success = False
+        error = f"Error while downloading {url}. {str(ex)}"
+    return success, error, filename
 
 def json_encoder(obj):
     """JSON encoder for objects not serializable by default json code"""

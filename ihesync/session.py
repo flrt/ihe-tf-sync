@@ -34,6 +34,7 @@ class Context:
             If the directory does not exists : create it
             Get some count informations
         """
+        retcode = True
 
         conf = {}
         if not (os.path.exists(self.conf_directory)):
@@ -43,7 +44,7 @@ class Context:
         self.sync.load_configuration()
         self.initial_domains = self.sync.domain_filter[:]
         self.logger.info(f"Initial domains : {self.initial_domains}")
-        self.sync.doc_cartography()
+        retcode &= self.sync.doc_cartography()
 
         # if no previous context exists, copy the current one
         if len(self.sync.refdoc.keys()) < 2:
@@ -53,9 +54,7 @@ class Context:
         if len(self.sync.doc.keys()) < 2:
             self.sync.duplicate_docs(source_ref=True)
 
-        # scan local directory to get unreferenced documents
-        self.local_file_count_ondisk = self.sync.scan_local_dirs()
-
+        self.scan_local_dirs()
         self.refresh_counts_ref()
 
         # build domain list. From reference map (saved) + remote map
@@ -67,6 +66,12 @@ class Context:
         for dom in self.domains_info(self.sync.doc):
             if dom['name'] not in ref_domains:
                 self.domains.append(dom)
+
+        return retcode
+
+    def scan_local_dirs(self):
+        # scan local directory to get unreferenced documents
+        self.local_file_count_ondisk = self.sync.scan_local_dirs()
 
     def refresh_counts_ref(self):
         self.refresh_counts(self.sync.refdoc)
