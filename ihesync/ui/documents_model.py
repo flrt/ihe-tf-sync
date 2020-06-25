@@ -1,13 +1,12 @@
 import typing
 
 from PyQt5.Qt import *
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui
 
 import logging
 
 DOWNLOADED_BACKGROUND_COLOR = QtGui.QColor(214, 234, 248)
-
-
+ERR_COUNT_BACKGROUND_COLOR = QtGui.QColor(255, 165, 0)
 
 
 class DocumentsModel(QAbstractTableModel):
@@ -17,7 +16,7 @@ class DocumentsModel(QAbstractTableModel):
 
         self.docs = data
         self.headers = ["Domain", "Local", "Total", "Title", "Link"]
-        self.datakeys = ["domain", "down", "total", "title", "link"]
+        self.datakeys = ["domain", "local", "total", "title", "link"]
 
     def log(self):
         for i, v in enumerate(self.docs):
@@ -54,26 +53,31 @@ class DocumentsModel(QAbstractTableModel):
             self.docs = []
 
     def data(self, index: QModelIndex, role: int = ...) -> typing.Any:
-        val = self.docs[index.row()][self.datakeys[index.column()]]
+        r, c = index.row(), index.column()
+
+        val = self.docs[r][self.datakeys[c]]
         if role == Qt.DisplayRole:
-            if not index.isValid() or (index.column()==4 and not self.docs[index.row()]["link"]):
+            if not index.isValid() or (c == 4 and not self.docs[r]["link"]):
                 return QVariant()
             return str(val)
-        elif role == Qt.TextAlignmentRole and (
-                index.column() == 1 or index.column() == 2
-        ):
+
+        if role == Qt.TextAlignmentRole and c in [1, 2]:
             return Qt.AlignCenter
-        elif (
-                role == Qt.BackgroundRole
-                and index.column() == 1
-                and self.docs[index.row()]["down"] > 0
-        ):
-            return DOWNLOADED_BACKGROUND_COLOR
-        elif role == Qt.EditRole:
+
+        if role == Qt.BackgroundRole:
+            if c == 1 and self.docs[r]["down"] > 0:
+                if self.docs[r]["down"] != self.docs[r]["local"]:
+                    return ERR_COUNT_BACKGROUND_COLOR
+                else:
+                    return DOWNLOADED_BACKGROUND_COLOR
+
+        if role == Qt.EditRole:
             return None
-        elif role == Qt.CheckStateRole:
-            if index.column() == 0:
-                return Qt.Checked if self.docs[index.row()]["checked"] else Qt.Unchecked
+
+        if role == Qt.CheckStateRole:
+            if c == 0:
+                return Qt.Checked if self.docs[r]["checked"] else Qt.Unchecked
+
         return None
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
@@ -98,9 +102,7 @@ class DocumentsModel(QAbstractTableModel):
             return True
         return False
 
-    def headerData(
-            self, section: int, orientation: Qt.Orientation, role: int = ...
-    ) -> typing.Any:
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...) -> typing.Any:
         if role != QtCore.Qt.DisplayRole:
             return QtCore.QVariant()
         if orientation == QtCore.Qt.Horizontal:

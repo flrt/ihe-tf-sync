@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
-from session import Context
+from ihesync.session import Context
 
 import logging
 

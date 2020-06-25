@@ -15,14 +15,13 @@ import os
 import os.path
 import sys
 from pathlib import Path
-import json
 import argparse
 import datetime
 import locale
 import copy
 import requests
 from bs4 import BeautifulSoup
-import helpers
+from ihesync import helpers
 import logging
 
 IHE_URL = "https://www.ihe.net"
@@ -34,7 +33,7 @@ GENERAL_INFO_FILENAME = "infos.txt"
 DEFAULT_CONF_DIR = Path.home() / '.ihe-sync'
 DEFAULT_DOC_DIR = Path.home() / 'Documents' / 'ihe-documents'
 DEFAULT_LOG_FILENAME = "ihe-sync.log"
-DEFAULT_LOG_LEVEL = "INFO"
+DEFAULT_LOG_LEVEL = "DEBUG"
 META_TAG = "__meta__"
 
 
@@ -68,8 +67,9 @@ class Synchro:
             self.log_level=level
         if filename is not None:
             if logging.getLogger().hasHandlers():
+                print("update hashandler")
                 for h in logging.getLogger().handlers:
-                    if isinstance(h, logging.FileHandler) and h.baseFilename.endswith(filename):
+                    if isinstance(h, logging.FileHandler) and h.baseFilename.endswith(self.log_filename):
                         logging.getLogger().removeHandler(h)
             self.log_filename = filename
         if level or filename:
@@ -243,6 +243,7 @@ class Synchro:
                 unsorted_docs[docinfo["filename"]] = docinfo
         self.logger.info(f"\n{len(unsorted_docs)} documents found in IHE website : {doc_class}")
         self.classify(unsorted_docs)
+        self.logger.debug(f"IHE category keys {self.doc.keys()}")
 
     def display_available_docs(self):
         """
@@ -272,13 +273,15 @@ class Synchro:
         for k in keys:
             for k2 in keys:
                 if k != k2 and k.startswith(k2):
-                    # print(f"Moving documents from {k2} to {k}")
+                    self.logger.debug(f"Moving documents from {k2} to {k}")
                     for keydoc, docinfo in self.doc[k2].items():
                         self.doc[k][keydoc] = docinfo
+                        docinfo["domain"]=k
                     self.doc[k2] = {}
         # delete empty domains
         for k in keys:
             if not len(self.doc[k]):
+                self.logger.debug(f"Delete {k} category from doc repo")
                 del self.doc[k]
 
     def save(self, filename):
@@ -338,7 +341,7 @@ class Synchro:
         )
 
     def prepare_sync2(self, remote_check=True):
-        self.logger.info(f"sync : prepare-sync : {self.domain_filter} remote check {remote_check}")
+        self.logger.info(f"sync : prepare-sync 2 : {self.domain_filter} remote check {remote_check}")
         if remote_check:
             [self.get_document_characteristics(doc) for doc in self.get_document_tocheck_list()]
 
@@ -393,6 +396,9 @@ class Synchro:
         if len(self.doc.keys()) == 0:
             self.doc = copy.deepcopy(self.refdoc)
 
+        self.logger.debug(f"Ref doc keys {self.refdoc.keys()}")
+        self.logger.debug(f" doc keys {self.doc.keys()}")
+
         # looking for obsolete documents
         for domain, docs in self.refdoc.items():
             for keydoc, docinfo in self.refdoc[domain].items():
@@ -440,6 +446,7 @@ class Synchro:
         """
 
         rootdir = os.path.join(self.outputdir, docinfo["domain"])
+        self.logger.debug(f"document path {rootdir} [{docinfo['filename']}]")
         if not os.path.exists(rootdir):
             os.makedirs(rootdir)
 
@@ -503,7 +510,7 @@ class Synchro:
 
         return False
 
-    def scan_local_dir(self):
+    def scan_local_dirs(self):
         """
         Scan local repository and set information about documents already downloaded
 
@@ -526,6 +533,12 @@ class Synchro:
                     total += 1
         return total
 
+    def count_local_files(self, domain):
+        """
+
+        """
+        dirname = os.path.join(self.outputdir, domain)
+        return len(os.listdir(dirname))
 
 def main():
     """

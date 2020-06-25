@@ -1,7 +1,8 @@
 import os.path
 import logging
 
-import sync
+from ihesync import sync
+
 
 class Context:
     """
@@ -53,7 +54,7 @@ class Context:
             self.sync.duplicate_docs(source_ref=True)
 
         # scan local directory to get unreferenced documents
-        self.local_file_count_ondisk = self.sync.scan_local_dir()
+        self.local_file_count_ondisk = self.sync.scan_local_dirs()
 
         self.refresh_counts_ref()
 

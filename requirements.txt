@@ -1,3 +1,5 @@
 requests
 beautifulsoup4
 html5lib
+PyQt5
+cx_Freeze

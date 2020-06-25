@@ -1,33 +1,42 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # Python 3
- 
-"""
-Icone sous Windows: il faut:
-=> un xxx.ico pour integration dans le exe, avec "icon=xxx.ico"
-=> un xxx.png pour integration avec PyQt4 + demander la recopie avec includefiles.
-"""
- 
+
 import sys, os
 from cx_Freeze import setup, Executable
- 
+
+APPNAME = 'ihesync'
+APPDESCR = 'Synchronize published documents on ihe.net website locally.'
+MAIN = 'ihesync/ui/app.py'
+__version__ = '2.0'
+__author__ = "Frederic Laurent"
 #############################################################################
 # preparation des options
  
 # chemins de recherche des modules
 # ajouter d'autres chemins (absolus) si necessaire: sys.path + ["chemin1", "chemin2"]
-path = sys.path + ["ui"]
+path = sys.path + ["ihesync", "ihesync/ui"]
  
 # options d'inclusion/exclusion des modules
 includes = []  # nommer les modules non trouves par cx_freeze
 excludes = []
 packages = []  # nommer les packages utilises
- 
+
+buildOptions = dict(packages=["multiprocessing"], excludes=["tkinter"])
+
+
+winOptions = {"upgrade-code": "44aad47f-38bd-4fcf-b70c-b0b4cf3f246b",
+              "initial_target_dir": r'[ProgramFilesFolder]\%s' % APPNAME,
+              "install_icon": "assets/icon.ico",
+              "target_name": APPNAME}
+
 # copier les fichiers non-Python et/ou repertoires et leur contenu:
 includefiles = []
- 
+
+base = None
+
 if sys.platform == "win32":
-    pass
+    base = "Win32GUI"
     # includefiles += [...] : ajouter les recopies specifiques à Windows
 elif sys.platform == "linux2":
     pass
@@ -67,45 +76,34 @@ if sys.platform == "win32":
  
 #############################################################################
 # preparation des cibles
-base = None
-if sys.platform == "win32":
-    base = "Win32GUI"  # pour application graphique sous Windows
-    # base = "Console" # pour application en console sous Windows
- 
-target_app = Executable(
-    script="app.py",
-    base=base,
-#    compress=False,  # <= ne pas generer de fichier zip
-    copyDependentFiles=True,
-    appendScriptToExe=True,
-    appendScriptToLibrary=False,  # <= ne pas generer de fichier zip
-    icon="icon.ico"
-    )
 
-#cible_2 = Executable(
-#    script="monprogramme2.pyw",
-#    base=base,
-#    compress=False,
-#    copyDependentFiles=True,
-#    appendScriptToExe=True,
-#    appendScriptToLibrary=False,
-#    icon=icone
-#    )
- 
+target_app = [Executable(
+    script=MAIN,
+    base=base,
+    targetName=APPNAME,
+    icon="assets/icon.ico"
+    )]
+
+
 #############################################################################
 # creation du setup
-setup(
-    name="ihe-tf-sync",
-    version="2.00",
-    description="Synchronize published documents on ihe.net website locally.",
-    author="Frederic Laurent",
-    options={"build_exe": options},
-    executables=[target_app]
+if sys.platform == "win32":
+    setup(
+    name=APPNAME,
+    version=__version__,
+    description=APPDESCR,
+    packages=[APPNAME],
+    options={"build_exe": buildOptions, "sdist_msi": winOptions},
+    executables=target_app,
+    author=__author__,
     )
-
-
-#    setup(name='ihe-tf-sync',
-#      version = '2.0',
-#      description = 'Synchronize published documents on ihe.net website locally.',
-#      options = dict(build_exe = buildOptions),
-#      executables = executables)
+elif sys.platform == "linux":
+    setup(
+    name=APPNAME,
+    version=__version__,
+    description=APPDESCR,
+    packages=[APPNAME],
+    options={"build_exe": buildOptions, "sdist_msi": winOptions},
+    executables=target_app,
+    author=__author__,
+    )

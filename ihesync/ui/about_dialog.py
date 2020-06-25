@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'about_dialog.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -39,7 +39,7 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.aboutLabel.setText(_translate("Dialog", "TextLabel"))
-import ui.resources_rc
+from ihesync.ui import resources_rc
 
 
 if __name__ == "__main__":

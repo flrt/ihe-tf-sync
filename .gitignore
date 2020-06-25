@@ -4,3 +4,7 @@ data/
 .vscode/
 .idea/
 .vscode/
+lib/
+lib64/
+share/
+bin/

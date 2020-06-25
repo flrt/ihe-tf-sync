@@ -7,19 +7,13 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import pyqtSlot, QThreadPool
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-import sync
-import session
+from ihesync import session
+from ihesync.ui import ihesync_app
+from ihesync.ui import documents_model
+from ihesync.ui import dialogs
+from ihesync.ui import sync_worker
 
-import helpers
-import ui.ihesync_app
-import ui.prepare_dialog
-#import ui.about_dialog
-from ui.dialogs import SyncDialog, AboutDialog
-from ui import documents_model
-from ui import sync_worker, dialogs
-
-
-VERSION = 1.0
+__version__ = 1.0
 DOMAIN_DICT = {
     "CARD": "Cardiology",
     "DENT": "Dental",
@@ -42,7 +36,7 @@ DOMAIN_DICT = {
 }
 
 
-class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
+class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     def __init__(self, context, parent=None):
         super(Ui, self).__init__(parent)
         self.logger = logging.getLogger()
@@ -111,6 +105,7 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
         domains = sorted(self.context.domains, key=lambda v: v["name"])
         data = []
         for domain in domains:
+            local_count=self.context.sync.count_local_files(domain["name"])
             data.append(
                 {
                     "checked": domain["selected"],
@@ -120,7 +115,8 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
                     else "",
                     "down": domain["downloaded"],
                     "total": domain["files"],
-                    "link": domain["downloaded"]>0
+                    "link": local_count > 0,
+                    "local": local_count
                 }
             )
 
@@ -137,7 +133,6 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
         rad = dict(INFO=self.infoRadioButton, ERROR=self.errorRadioButton, DEBUG=self.debugRadioButton)
         if self.context.sync.log_level in rad:
             rad[self.context.sync.log_level].setChecked(True)
-
 
     def refresh_counts(self):
         self.refresh_last_checked()
@@ -181,7 +176,6 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
         else:
             self.logger.error(f"Can't open file {self.textLoggingFilename.toPlainText()} which does not exist!")
 
-
     @pyqtSlot()
     def on_textConfDir_textChanged(self):
         self.context.conf_directory = self.textConfDir.toPlainText()
@@ -217,7 +211,7 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
         self.refresh_counts()
 
     def synchronize_dialog(self):
-        sd = SyncDialog(parent=self)
+        sd = dialogs.SyncDialog(parent=self)
         sd.confirm_signal.connect(self.on_synchronize_confirmed)
         sd.reject_signal.connect(self.on_synchronize_rejected)
 
@@ -282,9 +276,8 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
         event.accept()
 
     def open_documents_folder(self, index: QtCore.QModelIndex) -> None:
-        print(index.row(), index.column(), index.model().docs[index.row()]['link'])
         docinfo = index.model().docs[index.row()]
-        if docinfo['link']:
+        if docinfo['link'] and index.column()==4:
             dom = self.context.local_path_domain(docinfo['domain'])
             webbrowser.open_new(dom)
 
@@ -292,7 +285,7 @@ class Ui(QtWidgets.QMainWindow, ui.ihesync_app.Ui_MainWindow):
 class OpenFolderDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, parent=None):
         super(OpenFolderDelegate, self).__init__(parent)
-        self.icon = QtGui.QIcon(":/images/img/files.svg")
+        self.icon = QtGui.QIcon(":/img/files.svg")
 
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> None:
         if index.model().docs[index.row()]['link']:

@@ -1,11 +1,12 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import pyqtSlot
 
-import ui.sync_dialog
-import ui.progress_dialog
-import ui.about_dialog
+from ihesync import ui
+from ihesync.ui import progress_dialog
+from ihesync.ui import about_dialog
+from ihesync.ui import sync_dialog
 
-class SyncDialog(QtWidgets.QDialog, ui.sync_dialog.Ui_SyncDialog):
+class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
     confirm_signal = QtCore.pyqtSignal()
     reject_signal = QtCore.pyqtSignal()
 
@@ -112,7 +113,7 @@ class ProgressSyncDialog(QtWidgets.QDialog):
 
     def __init__(self, text, parent=None):
         super(ProgressSyncDialog, self).__init__(parent)
-        self.ui = ui.progress_dialog.Ui_ProgressDialog()
+        self.ui = progress_dialog.Ui_ProgressDialog()
         self.ui.setupUi(self)
         self.text = text
         self.ui.labelProgress.setText(self.text)
@@ -141,7 +142,7 @@ class ProgressSyncDialog(QtWidgets.QDialog):
 class AboutDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(AboutDialog, self).__init__(parent)
-        self.ui = ui.about_dialog.Ui_Dialog()
+        self.ui = about_dialog.Ui_Dialog()
         self.ui.setupUi(self)
         #self.ui.softTextEdit.setOpenExternalLinks(True)
         fd = QtCore.QFile(":/txt/about.html")

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>IHE TF Synchronizer</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QTabWidget" name="tabWidget">
@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tabDomains">
      <attribute name="title">
@@ -136,7 +136,7 @@
       </property>
       <property name="icon">
        <iconset resource="resources.qrc">
-        <normaloff>:/images/img/sync.svg</normaloff>:/images/img/sync.svg</iconset>
+        <normaloff>:/img/sync.svg</normaloff>:/img/sync.svg</iconset>
       </property>
      </widget>
      <widget class="QTableView" name="tableView">
@@ -218,7 +218,7 @@
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap resource="resources.qrc">:/images/img/info.svg</pixmap>
+        <pixmap resource="resources.qrc">:/img/info2.svg</pixmap>
        </property>
       </widget>
      </widget>
@@ -305,7 +305,7 @@
        </property>
        <property name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/images/img/edit.svg</normaloff>:/images/img/edit.svg</iconset>
+         <normaloff>:/img/edit.svg</normaloff>:/img/edit.svg</iconset>
        </property>
       </widget>
       <widget class="QPushButton" name="deleteLogPushButton">
@@ -322,7 +322,7 @@
        </property>
        <property name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/images/img/delete.svg</normaloff>:/images/img/delete.svg</iconset>
+         <normaloff>:/img/delete.svg</normaloff>:/img/delete.svg</iconset>
        </property>
       </widget>
       <widget class="QLabel" name="labelLogLevel">
@@ -352,7 +352,7 @@
        </property>
        <property name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/images/img/change.svg</normaloff>:/images/img/change.svg</iconset>
+         <normaloff>:/img/change.svg</normaloff>:/img/change.svg</iconset>
        </property>
       </widget>
       <widget class="QLabel" name="labelLogLevel_2">
@@ -418,7 +418,7 @@
        </property>
        <property name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/images/img/refresh.svg</normaloff>:/images/img/refresh.svg</iconset>
+         <normaloff>:/img/refresh.svg</normaloff>:/img/refresh.svg</iconset>
        </property>
       </widget>
       <widget class="QLabel" name="labelConfOutputdir">
@@ -458,7 +458,7 @@
        </property>
        <property name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/images/img/folder.svg</normaloff>:/images/img/folder.svg</iconset>
+         <normaloff>:/img/folder.svg</normaloff>:/img/folder.svg</iconset>
        </property>
       </widget>
       <widget class="QPushButton" name="docSelectButton">
@@ -475,7 +475,7 @@
        </property>
        <property name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/images/img/folder.svg</normaloff>:/images/img/folder.svg</iconset>
+         <normaloff>:/img/folder.svg</normaloff>:/img/folder.svg</iconset>
        </property>
       </widget>
      </widget>
@@ -493,7 +493,7 @@
       </property>
       <property name="icon">
        <iconset resource="resources.qrc">
-        <normaloff>:/images/img/info2.svg</normaloff>:/images/img/info2.svg</iconset>
+        <normaloff>:/img/info.svg</normaloff>:/img/info.svg</iconset>
       </property>
      </widget>
     </widget>
@@ -518,7 +518,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>29</height>
     </rect>
    </property>
   </widget>
