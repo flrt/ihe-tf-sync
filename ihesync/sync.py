@@ -348,50 +348,6 @@ class Synchro:
                 and self.doc[domain][keydoc]["size"] != self.refdoc[domain][keydoc]["size"]
         )
 
-    def prepare_sync2(self, remote_check=True):
-        self.logger.info(f"sync : prepare-sync 2 : {self.domain_filter} remote check {remote_check}")
-        if remote_check:
-            [self.get_document_characteristics(doc) for doc in self.get_document_tocheck_list()]
-
-        to_del = []
-        to_download = []
-
-        # if more recent doc repo has not been synchronized, copy the reference one (the last one)
-        if len(self.doc.keys()) == 0:
-            self.doc = copy.deepcopy(self.refdoc)
-
-        # looking for obsolete documents
-        for domain, docs in self.refdoc.items():
-            for keydoc, docinfo in self.refdoc[domain].items():
-                if "etag" in docinfo or "size" in docinfo:
-                    # already downloaded
-
-                    self.logger.info(
-                        f"{keydoc} domain not in domain_filter {docinfo['domain'] not in self.domain_filter}")
-                    self.logger.info(f"{keydoc} keydoc not in doc {keydoc not in self.doc[domain]}")
-                    self.logger.info(f"{keydoc} no etag {'etag' not in self.doc[domain][keydoc]}")
-                    self.logger.info(f"{keydoc} no size {'size' not in self.doc[domain][keydoc]}")
-
-                    if (docinfo['domain'] not in self.domain_filter
-                            or
-                            keydoc not in self.doc[domain]
-                            or "etag" not in self.doc[domain][keydoc]
-                            or "size" not in self.doc[domain][keydoc]
-                    ):
-                        to_del.append(docinfo)
-
-        # looking for new documents
-        for domain, docs in self.doc.items():
-            if domain in self.domain_filter:
-                self.logger.info(f"prepare_sync : domain {domain}")
-                # domain to sync
-                for keydoc, docinfo in self.doc[domain].items():
-                    if self.is_different(domain, keydoc) or not self.check_local(
-                            docinfo
-                    ):
-                        to_download.append(docinfo)
-        return to_del, to_download
-
     def prepare_sync(self, remote_check=True):
         self.logger.info(f"sync : prepare-sync : {self.domain_filter} remote check {remote_check}")
         if remote_check:
@@ -469,7 +425,7 @@ class Synchro:
 
         """
 
-        filename = self.document_path(docinfo)
+        filename = self.document_path(docinfo, createpath=True )
         return helpers.download(docinfo["href"], filename)
 
     def delete(self, docinfo):

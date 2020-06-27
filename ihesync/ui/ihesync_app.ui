@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>IHE TF Synchronizer</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/img/book_ihe.svg</normaloff>:/img/book_ihe.svg</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
@@ -24,7 +28,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tabDomains">
      <attribute name="title">

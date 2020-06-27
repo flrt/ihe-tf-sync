@@ -1,7 +1,6 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import pyqtSlot
 
-from ihesync import ui
 from ihesync.ui import progress_dialog
 from ihesync.ui import about_dialog
 from ihesync.ui import sync_dialog
@@ -112,12 +111,5 @@ class AboutDialog(QtWidgets.QDialog):
         super(AboutDialog, self).__init__(parent)
         self.ui = about_dialog.Ui_Dialog()
         self.ui.setupUi(self)
-        #self.ui.softTextEdit.setOpenExternalLinks(True)
-        fd = QtCore.QFile(":/txt/about.html")
-        if fd.open(QtCore.QIODevice.ReadOnly | QtCore.QFile.Text):
-            text = QtCore.QTextStream(fd).readAll()
-        fd.close()
-        self.ui.aboutLabel.setText(text)
-
     def main(self, worker=None):
         self.show()

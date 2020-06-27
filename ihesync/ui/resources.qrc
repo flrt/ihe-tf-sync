@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/">
+    <file>img/book_ihe_64.png</file>
     <file>img/info2.svg</file>
     <file>img/sync.svg</file>
     <file>img/info.svg</file>
@@ -9,6 +10,7 @@
     <file>img/change.svg</file>
     <file>img/folder.svg</file>
     <file>img/refresh.svg</file>
+    <file>img/book_ihe.svg</file>
   </qresource>
   <qresource prefix="txt">
     <file>about.html</file>

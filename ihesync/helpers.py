@@ -62,9 +62,16 @@ def download(url, filename):
 
     try:
         req = requests.get(url, stream=True)
+
         with open(filename, "wb") as f:
             shutil.copyfileobj(req.raw, f)
+    except FileNotFoundError as fnf:
+        success = False
+        error = f"Error while downloading {url} - I/O Problem with {filename} : FileNotFound -> check path"
     except Exception as ex:
+        print(ex.__class__)
+        print(ex.__cause__)
+        print(ex.__context__)
         success = False
         error = f"Error while downloading {url}. {str(ex)}"
     return success, error, filename

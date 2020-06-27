@@ -112,6 +112,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         data = []
         for domain in domains:
             local_count = self.context.sync.count_local_files(domain["name"])
+            print(domain, local_count)
             data.append(
                 {
                     "checked": domain["selected"],
@@ -122,7 +123,8 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
                     "down": domain["downloaded"],
                     "total": domain["files"],
                     "link": local_count > 0,
-                    "local": local_count
+                    "local": local_count,
+                    "error":0
                 }
             )
 
@@ -141,12 +143,17 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             rad[self.context.sync.log_level].setChecked(True)
 
     def refresh_counts(self):
+        self.newDocsGroupBox.setVisible(False)
         self.refresh_last_checked()
         self.labelDocumentCountValue.setText(str(self.context.file_count))
         self.labelLocalFilesCountValue.setText(str("{}/{}"
                                                    .format(self.context.local_file_count_ondisk,
                                                            self.context.local_file_count)))
         self.refresh_domain_list()
+        diff = self.context.check_updates_available()
+        if diff>0:
+            self.newDocLabel.setText(f"{diff} document changes")
+            self.newDocsGroupBox.setVisible(True)
 
     def build_statusbar(self):
         self.modifed_label = QLabel("Status: No change")
@@ -156,16 +163,14 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.statusBar().addPermanentWidget(VLine())  # <---
         self.statusBar().addPermanentWidget(self.modifed_label)
 
-    def change_status(self, msg=None, changed=None):
+    def change_status(self, msg=None, changed=None, duration=3000):
         if changed:
             self.changed = changed
 
         self.modifed_label.setText("Status: Changed !" if self.changed else "Status: No change")
 
         if msg:
-            self.statusbar.showMessage(msg, 3000)
-
-
+            self.statusbar.showMessage(msg, duration)
 
     @pyqtSlot()
     def on_aboutPushButton_clicked(self):
@@ -278,6 +283,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         worker = sync_worker.SyncWorker(self.context)
 
         worker.signals.finished.connect(sd.accept)
+        worker.signals.finished.connect(self.sync_finished)
         worker.signals.progress.connect(self.doc_model.update_documents)
         worker.signals.aborted.connect(sd.reject)
         sd.main(worker)
@@ -287,6 +293,11 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.context.refresh_counts_current()
         self.context.scan_local_dirs()
         self.refresh_counts()
+
+    def sync_finished(self):
+        downloaded, error = self.doc_model.summary()
+        self.change_status(f"{downloaded} download(s), {error} error(s)")
+
 
     @pyqtSlot()
     def on_synchronize_rejected(self):
@@ -315,6 +326,7 @@ class OpenFolderDelegate(QtWidgets.QStyledItemDelegate):
         self.icon = QtGui.QIcon(":/img/files.svg")
 
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> None:
+        print("Open ", index.model().docs[index.row()])
         if index.model().docs[index.row()]['link']:
             self.icon.paint(painter, option.rect, QtCore.Qt.AlignLeft)
         else:
@@ -330,7 +342,6 @@ class VLine(QFrame):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     ctx = session.Context()
-
     iheui = Ui(ctx)
     iheui.main()
     app.exec_()

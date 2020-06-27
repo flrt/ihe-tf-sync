@@ -2,6 +2,7 @@ import typing
 
 from PyQt5.Qt import *
 from PyQt5 import QtCore, QtGui
+from ihesync.ui import sync_worker
 
 import logging
 
@@ -40,11 +41,18 @@ class DocumentsModel(QAbstractTableModel):
         )
         for documents in self.docs:
             if documents["domain"] == docinfo["domain"]:
-                if action == "DEL":
+                if action == sync_worker.WORKER_ACTION_DEL:
                     documents["down"] -= 1
-                elif action == "DOWN":
+                elif action == sync_worker.WORKER_ACTION_DOWN:
                     documents["down"] += 1
-                documents["link"] = documents["down"] > 0
+                elif action == sync_worker.WORKER_ACTION_ERR:
+                    documents["error"] += 1
+            documents["link"] = documents["local"] > 0
+
+    def summary(self):
+        error = sum(list(map(lambda x: x["error"], self.docs)))
+        downloaded = sum(list(map(lambda x: x["down"], self.docs)))
+        return downloaded, error
 
     def set_documents(self, data):
         if data is not None and len(data):

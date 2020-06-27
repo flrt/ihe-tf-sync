@@ -31,7 +31,8 @@ class Context:
     def load_configuration(self):
         """
             Load configuration form local config file.
-            If the directory does not exists : create it
+            Check remote, gather informations about available docs.
+
             Get some count informations
         """
         retcode = True
@@ -128,3 +129,15 @@ class Context:
 
     def local_path_domain(self, domain):
         return os.path.join(self.sync.outputdir, domain)
+
+    def check_updates_available(self):
+        """
+            check if some documents are newly available
+        :return: change count
+        """
+        change_count=0
+        for domain in self.initial_domains:
+            diff = abs(len(self.sync.doc[domain]) - len(self.sync.refdoc[domain]))
+            if diff>0:
+                change_count += diff
+        return change_count

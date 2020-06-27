@@ -1,14 +1,14 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
-from ihesync.session import Context
-
 import logging
 
+WORKER_ACTION_DOWN='Download'
+WORKER_ACTION_DEL='Delete'
+WORKER_ACTION_ERR='Error'
 
 class BasicSignals(QObject):
     finished = pyqtSignal()
     aborted = pyqtSignal()
     progress = pyqtSignal(tuple)
-
 
 class BasicWorker(QRunnable):
     def __init__(self, model):
@@ -20,7 +20,6 @@ class BasicWorker(QRunnable):
     def abort(self):
         self.aborted = True
         self.signals.aborted.emit()
-
 
 class PrepareWorker(BasicWorker):
     def __init__(self, model):
@@ -61,7 +60,7 @@ class SyncWorker(BasicWorker):
             if not success:
                 self.logger.error(f"Worker error : {error}")
             self.signals.progress.emit(
-                (idx + 1, "Delete" if success else "Error", self.model.infos["to_del"][idx])
+                (idx + 1, WORKER_ACTION_DEL if success else WORKER_ACTION_ERR, self.model.infos["to_del"][idx])
             )
             idx += 1
 
@@ -72,8 +71,9 @@ class SyncWorker(BasicWorker):
             )
             success, error, filename = self.model.sync.download(self.model.infos["to_download"][idx])
             if not success:
-                self.logger.error("Worker error : {error}")
-            self.signals.progress.emit((idx + 1, "Download" if success else "Error", self.model.infos["to_download"][idx]))
+                self.logger.error(f"Worker error : {error}")
+            self.signals.progress.emit((idx + 1, WORKER_ACTION_DOWN if success else WORKER_ACTION_ERR,
+                                        self.model.infos["to_download"][idx]))
             idx += 1
 
         if self.aborted is False:
