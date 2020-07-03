@@ -44,11 +44,15 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.setupUi(self)
         self.context = context
         self.changed = False
-        self.label_ihewebsite.setText(
-            'Visit IHE Website : <a href="www.ihe.net">tech</a>'
-        )
+        self.label_ihewebsite.setText('Visit IHE Website : <a href="www.ihe.net">tech</a>')
 
-        self.build_statusbar()
+        self.modifed_label = QLabel("Status: No change")
+        self.modifed_label.setStyleSheet('border: 0; color:  blue;')
+        self.statusBar().setStyleSheet('border: 0; background-color: #FFF8DC;')
+        self.statusBar().setStyleSheet("QStatusBar::item {border: none;}")
+        self.statusBar().addPermanentWidget(VLine())  # <---
+        self.statusBar().addPermanentWidget(self.modifed_label)
+
         self.label_ihewebsite.setOpenExternalLinks(True)
         self.threadpool = QThreadPool()
         self.threadpool.setMaxThreadCount(4)
@@ -112,7 +116,6 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         data = []
         for domain in domains:
             local_count = self.context.sync.count_local_files(domain["name"])
-            print(domain, local_count)
             data.append(
                 {
                     "checked": domain["selected"],
@@ -154,14 +157,6 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         if diff>0:
             self.newDocLabel.setText(f"{diff} document changes")
             self.newDocsGroupBox.setVisible(True)
-
-    def build_statusbar(self):
-        self.modifed_label = QLabel("Status: No change")
-        self.modifed_label.setStyleSheet('border: 0; color:  blue;')
-        self.statusBar().setStyleSheet('border: 0; background-color: #FFF8DC;')
-        self.statusBar().setStyleSheet("QStatusBar::item {border: none;}")
-        self.statusBar().addPermanentWidget(VLine())  # <---
-        self.statusBar().addPermanentWidget(self.modifed_label)
 
     def change_status(self, msg=None, changed=None, duration=3000):
         if changed:
@@ -326,7 +321,6 @@ class OpenFolderDelegate(QtWidgets.QStyledItemDelegate):
         self.icon = QtGui.QIcon(":/img/files.svg")
 
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> None:
-        print("Open ", index.model().docs[index.row()])
         if index.model().docs[index.row()]['link']:
             self.icon.paint(painter, option.rect, QtCore.Qt.AlignLeft)
         else:

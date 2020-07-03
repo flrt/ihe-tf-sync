@@ -100,7 +100,7 @@ class ProgressSyncDialog(QtWidgets.QDialog):
         self.worker.abort()
 
     def progress(self, data):
-        index, action, doc = data
+        index, action, doc, local = data
         self.ui.labelProgress.setText(f"{self.text} {action} {index}/{self.max_doc}")
         self.ui.labelFilename.setText(doc["filename"])
         self.ui.progressBarPrepare.setValue(index)

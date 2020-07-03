@@ -35,7 +35,7 @@ class DocumentsModel(QAbstractTableModel):
         return 5
 
     def update_documents(self, val):
-        (idx, action, docinfo) = val
+        (idx, action, docinfo, local_count) = val
         self.logger.info(
             f"update_documents > idx={idx} action={action} docinfo={docinfo}"
         )
@@ -47,6 +47,8 @@ class DocumentsModel(QAbstractTableModel):
                     documents["down"] += 1
                 elif action == sync_worker.WORKER_ACTION_ERR:
                     documents["error"] += 1
+            documents["local"]=local_count
+
             documents["link"] = documents["local"] > 0
 
     def summary(self):

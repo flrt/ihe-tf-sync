@@ -64,7 +64,7 @@ class Synchro:
 
     def update_logger_config(self, level=None, filename=None):
         if level is not None:
-            self.log_level=level
+            self.log_level = level
         if filename is not None:
             if logging.getLogger().hasHandlers():
                 print("update hashandler")
@@ -74,7 +74,6 @@ class Synchro:
             self.log_filename = filename
         if level or filename:
             self.config_logging()
-
 
     def load_configuration(self):
         # Load previous configuration if presen
@@ -252,7 +251,6 @@ class Synchro:
             retcode = False
         return retcode
 
-
     def display_available_docs(self):
         """
         Display how many documents are available in each domain.
@@ -284,7 +282,7 @@ class Synchro:
                     self.logger.debug(f"Moving documents from {k2} to {k}")
                     for keydoc, docinfo in self.doc[k2].items():
                         self.doc[k][keydoc] = docinfo
-                        docinfo["domain"]=k
+                        docinfo["domain"] = k
                     self.doc[k2] = {}
         # delete empty domains
         for k in keys:
@@ -425,7 +423,7 @@ class Synchro:
 
         """
 
-        filename = self.document_path(docinfo, createpath=True )
+        filename = self.document_path(docinfo, createpath=True)
         return helpers.download(docinfo["href"], filename)
 
     def delete(self, docinfo):
@@ -493,7 +491,8 @@ class Synchro:
                     self.doc[relative_path][name]["last-modified"] = r.st_size
 
                     # copy the etag metadata of the previous downloaded file
-                    if self.doc[relative_path][name]["size"] == self.refdoc[relative_path][name]["size"]:
+
+                    if 'size' in self.refdoc[relative_path][name] and self.doc[relative_path][name]["size"] == self.refdoc[relative_path][name]["size"]:
                         if "etag" in self.refdoc[relative_path][name]:
                             self.doc[relative_path][name]["etag"] = self.refdoc[relative_path][name]["etag"]
 
@@ -511,6 +510,7 @@ class Synchro:
             else:
                 self.logger.error(f"I/O Erreur {dirname} is a file, a directory was expected !")
         return 0
+
 
 def main():
     """
