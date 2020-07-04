@@ -1,5 +1,7 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 import logging
+import socket
+import time
 
 WORKER_ACTION_DOWN='Download'
 WORKER_ACTION_DEL='Delete'
@@ -35,7 +37,7 @@ class PrepareWorker(BasicWorker):
         idx = 0
         while (idx < len(doclist)) and self.aborted is False:
             self.context.sync.get_document_characteristics(doclist[idx])
-            self.signals.progress.emit((idx + 1, "", doclist[idx]))
+            self.signals.progress.emit((idx + 1, "", doclist[idx],0))
             idx += 1
         if self.aborted is False:
             self.signals.finished.emit()
@@ -80,3 +82,29 @@ class SyncWorker(BasicWorker):
 
         if self.aborted is False:
             self.signals.finished.emit()
+
+class NetworkWorker(BasicWorker):
+    def __init__(self, ip, port, delay):
+        super().__init__(None)
+        self.logger = logging.getLogger()
+        self.ip = ip
+        self.port = port
+        self.delay = delay
+
+    def run(self):
+        while self.aborted == False:
+            self.signals.progress.emit((self.ip, self.is_connected()))
+            for tick in range(self.delay):
+                time.sleep(1)
+                if self.aborted == True:
+                    break
+
+    def is_connected(self):
+        try:
+            # connect to the host -- tells us if the host is actually
+            # reachable
+            socket.create_connection((self.ip, self.port))
+            return True
+        except OSError:
+            pass
+        return False

@@ -26,9 +26,9 @@ DOMAIN_DICT = {
     "PCC": "Patient Care Coordination",
     "PCD": "Patient Care Device",
     "PHARMACY": "Pharmacy",
-    "PHDSC": "",
+    "PHDSC": "Public Health Data Standards Consortium",
     "QRPH": "Quality, Research and Public Health",
-    "QUALITY": "",
+    "QUALITY": "Quality",
     "RAD": "Radiology",
     "RO": "Radiation Oncology",
     "SUPPL": "Supplements",
@@ -40,6 +40,8 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     def __init__(self, context, parent=None):
         super(Ui, self).__init__(parent)
         self.logger = logging.getLogger()
+        self.network_available = False
+        self.network_watchdog = None
 
         self.setupUi(self)
         self.context = context
@@ -48,9 +50,13 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
         self.modifed_label = QLabel("Status: No change")
         self.modifed_label.setStyleSheet('border: 0; color:  blue;')
+        self.network_label = QLabel("No network!")
+
         self.statusBar().setStyleSheet('border: 0; background-color: #FFF8DC;')
         self.statusBar().setStyleSheet("QStatusBar::item {border: none;}")
-        self.statusBar().addPermanentWidget(VLine())  # <---
+        self.statusBar().addPermanentWidget(VLine())
+        self.statusBar().addPermanentWidget(self.network_label)
+        self.statusBar().addPermanentWidget(VLine())
         self.statusBar().addPermanentWidget(self.modifed_label)
 
         self.label_ihewebsite.setOpenExternalLinks(True)
@@ -69,6 +75,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
     def main(self):
         self.show()
+        self.start_network_watchdog()
         conf_loaded = self.context.load_configuration()
 
         if not conf_loaded:
@@ -89,6 +96,24 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
                 ),
             )
             # msg.setIcon(QMessageBox.Warning)
+
+    def update_network_status(self, data):
+        (ip, self.network_available) = data
+        self.logger.debug(f"network status updated availaible = {self.network_available}")
+        if self.network_available:
+            self.network_label.setText("Connected")
+            self.network_label.setStyleSheet('border: 0; color:  green;')
+        else:
+            self.network_label.setText("no Network!")
+            self.network_label.setStyleSheet('border: 0; color:  red;')
+
+    def start_network_watchdog(self):
+        self.network_watchdog = sync_worker.NetworkWorker("9.9.9.9", 53, 30)
+        self.network_watchdog.signals.progress.connect(self.update_network_status)
+        self.threadpool.start(self.network_watchdog)
+
+
+
 
     def refresh_public_comment(self):
         state = (
@@ -279,7 +304,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
         worker.signals.finished.connect(sd.accept)
         worker.signals.finished.connect(self.sync_finished)
-        worker.signals.progress.connect(self.doc_model.update_documents)
+        #worker.signals.progress.connect(self.doc_model.update_documents)
         worker.signals.aborted.connect(sd.reject)
         sd.main(worker)
         self.threadpool.start(worker)
@@ -307,6 +332,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         else:
             self.logger.info("No changes")
         event.accept()
+        self.network_watchdog.abort()
 
     def open_documents_folder(self, index: QtCore.QModelIndex) -> None:
         docinfo = index.model().docs[index.row()]

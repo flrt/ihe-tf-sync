@@ -76,7 +76,7 @@ class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
 class ProgressSyncDialog(QtWidgets.QDialog):
     # confirm_signal = QtCore.pyqtSignal(object)
     REMOTE_INFO_TEXT = "Get remote informations about document "
-    SYNC_INFO_TEXT = "Sync ! "
+    SYNC_INFO_TEXT = "Synchronize ! "
 
     def __init__(self, text, parent=None):
         super(ProgressSyncDialog, self).__init__(parent)
