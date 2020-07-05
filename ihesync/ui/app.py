@@ -86,17 +86,35 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.refresh_domain_list()
 
         if self.context.local_file_count_ondisk != self.context.local_file_count:
-            msg = QMessageBox.about(
-                self,
-                "Information...",
-                (
-                    f"Out of sync ! Local files on disk {self.context.local_file_count_ondisk}"
-                    f" vs in configuration {self.context.local_file_count}\n"
-                    f" Sync needed"
-                ),
-            )
-            # msg.setIcon(QMessageBox.Warning)
+            self.msgbox_out_of_sync()
 
+    # -- Messages boxes ---
+    # ---------------------
+    def msgbox_out_of_sync(self):
+        msg = QMessageBox.about(
+            self,
+            "Information...",
+            (
+                f"Out of sync ! Local files on disk {self.context.local_file_count_ondisk}"
+                f" vs in configuration {self.context.local_file_count}\n"
+                f" Sync needed"
+            ),
+        )
+        # msg.setIcon(QMessageBox.Warning)
+
+    def msgbox_network_unavailable(self):
+        msg = QMessageBox.critical(
+            self,
+            "Network unavailable",
+            (
+                f"No network"
+                f" Check\n"
+            ),
+        )
+
+    # -- Messages boxes ---
+
+    # -- Check Network
     def update_network_status(self, data):
         (ip, self.network_available) = data
         self.logger.debug(f"network status updated availaible = {self.network_available}")
@@ -112,8 +130,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.network_watchdog.signals.progress.connect(self.update_network_status)
         self.threadpool.start(self.network_watchdog)
 
-
-
+    # -- Refresh counts
 
     def refresh_public_comment(self):
         state = (
@@ -152,7 +169,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
                     "total": domain["files"],
                     "link": local_count > 0,
                     "local": local_count,
-                    "error":0
+                    "error": 0
                 }
             )
 
@@ -179,7 +196,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
                                                            self.context.local_file_count)))
         self.refresh_domain_list()
         diff = self.context.check_updates_available()
-        if diff>0:
+        if diff > 0:
             self.newDocLabel.setText(f"{diff} document changes")
             self.newDocsGroupBox.setVisible(True)
 
@@ -191,6 +208,8 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
         if msg:
             self.statusbar.showMessage(msg, duration)
+
+    # -- UI callback
 
     @pyqtSlot()
     def on_aboutPushButton_clicked(self):
@@ -257,67 +276,16 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.refresh_counts()
 
     @pyqtSlot()
-    def on_remoteCheckButton_clicked(self):
-        self.context.check_remote()
-        self.refresh_counts()
-
-    def synchronize_dialog(self):
-        sd = dialogs.SyncDialog(parent=self)
-        sd.confirm_signal.connect(self.on_synchronize_confirmed)
-        sd.reject_signal.connect(self.on_synchronize_rejected)
-
-        sd.old_domains = self.context.infos["old_domain"]
-        sd.new_domains = self.context.infos["new_domain"]
-        sd.old_docs = self.context.infos["to_del"]
-        sd.new_docs = self.context.infos["to_download"]
-        if len(sd.old_domains) > 0 or len(sd.new_docs) > 0:
-            self.change_status(changed=True)
-        sd.main()
-
-    @pyqtSlot()
     def on_syncButton_clicked(self):
-        # get selected domains
-        domains = self.doc_model.checked()
-        self.logger.info(domains)
-        self.context.prepare_sync(domains)
-
-        pd = dialogs.ProgressSyncDialog(
-            dialogs.ProgressSyncDialog.REMOTE_INFO_TEXT, parent=self
-        )
-        worker = sync_worker.PrepareWorker(self.context)
-        worker.signals.finished.connect(pd.accept)
-        worker.signals.finished.connect(self.synchronize_dialog)
-        worker.signals.aborted.connect(pd.reject)
-        pd.main(worker)
-        self.threadpool.start(worker)
+        if self.network_available:
+            self.prepare_synchronization()
+        else:
+            self.msgbox_network_unavailable()
 
     @pyqtSlot()
     def on_synchronize_confirmed(self):
         self.logger.info("on_synchronize_confirmed")
-        self.doc_model.log()
-
-        self.context.sync.display_available_docs()
-        sd = dialogs.ProgressSyncDialog(
-            dialogs.ProgressSyncDialog.SYNC_INFO_TEXT, parent=self
-        )
-        worker = sync_worker.SyncWorker(self.context)
-
-        worker.signals.finished.connect(sd.accept)
-        worker.signals.finished.connect(self.sync_finished)
-        #worker.signals.progress.connect(self.doc_model.update_documents)
-        worker.signals.aborted.connect(sd.reject)
-        sd.main(worker)
-        self.threadpool.start(worker)
-
-        self.context.confirm_sync()
-        self.context.refresh_counts_current()
-        self.context.scan_local_dirs()
-        self.refresh_counts()
-
-    def sync_finished(self):
-        downloaded, error = self.doc_model.summary()
-        self.change_status(f"{downloaded} download(s), {error} error(s)")
-
+        self.do_synchronization()
 
     @pyqtSlot()
     def on_synchronize_rejected(self):
@@ -333,6 +301,68 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             self.logger.info("No changes")
         event.accept()
         self.network_watchdog.abort()
+
+    # -- > Actions --
+    # --------------
+
+    def prepare_synchronization(self):
+        # get selected domains
+        domains = self.doc_model.checked()
+        self.logger.info(domains)
+        self.context.prepare_sync(domains)
+
+        pd = dialogs.ProgressSyncDialog(
+            dialogs.ProgressSyncDialog.REMOTE_INFO_TEXT, parent=self
+        )
+        worker = sync_worker.PrepareWorker(self.context)
+        worker.signals.finished.connect(pd.accept)
+        worker.signals.finished.connect(self.synchronize_dialog)
+        worker.signals.aborted.connect(pd.reject)
+        pd.main(worker)
+        self.threadpool.start(worker)
+
+    def synchronize_dialog(self):
+        if self.network_available:
+            sd = dialogs.SyncDialog(parent=self)
+            sd.confirm_signal.connect(self.on_synchronize_confirmed)
+            sd.reject_signal.connect(self.on_synchronize_rejected)
+
+            sd.old_domains = self.context.infos["old_domain"]
+            sd.new_domains = self.context.infos["new_domain"]
+            sd.old_docs = self.context.infos["to_del"]
+            sd.new_docs = self.context.infos["to_download"]
+            if len(sd.old_domains) > 0 or len(sd.new_docs) > 0:
+                self.change_status(changed=True)
+            sd.main()
+        else:
+            self.msgbox_network_unavailable()
+
+    def do_synchronization(self):
+        self.doc_model.log()
+
+        self.context.sync.display_available_docs()
+        sd = dialogs.ProgressSyncDialog(
+            dialogs.ProgressSyncDialog.SYNC_INFO_TEXT, parent=self
+        )
+        worker = sync_worker.SyncWorker(self.context)
+
+        worker.signals.finished.connect(sd.accept)
+        worker.signals.finished.connect(self.sync_finished)
+        # worker.signals.progress.connect(self.doc_model.update_documents)
+        worker.signals.aborted.connect(sd.reject)
+        sd.main(worker)
+        self.threadpool.start(worker)
+
+        self.context.confirm_sync()
+        self.context.refresh_counts_current()
+        self.context.scan_local_dirs()
+        self.refresh_counts()
+
+    def sync_finished(self):
+        downloaded, error = self.doc_model.summary()
+        self.change_status(f"{downloaded} download(s), {error} error(s)")
+
+    # -- < Actions
 
     def open_documents_folder(self, index: QtCore.QModelIndex) -> None:
         docinfo = index.model().docs[index.row()]
@@ -357,7 +387,8 @@ class VLine(QFrame):
     # a simple VLine, like the one you get from designer
     def __init__(self):
         super(VLine, self).__init__()
-        self.setFrameShape(self.VLine|self.Sunken)
+        self.setFrameShape(self.VLine | self.Sunken)
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
