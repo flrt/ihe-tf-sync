@@ -3,14 +3,16 @@ import logging
 import socket
 import time
 
-WORKER_ACTION_DOWN='Download'
-WORKER_ACTION_DEL='Delete'
-WORKER_ACTION_ERR='Error'
+WORKER_ACTION_DOWN = 'Download'
+WORKER_ACTION_DEL = 'Delete'
+WORKER_ACTION_ERR = 'Error'
+
 
 class BasicSignals(QObject):
     finished = pyqtSignal()
     aborted = pyqtSignal()
     progress = pyqtSignal(tuple)
+
 
 class BasicWorker(QRunnable):
     def __init__(self, context):
@@ -22,6 +24,7 @@ class BasicWorker(QRunnable):
     def abort(self):
         self.aborted = True
         self.signals.aborted.emit()
+
 
 class PrepareWorker(BasicWorker):
     def __init__(self, context):
@@ -37,7 +40,7 @@ class PrepareWorker(BasicWorker):
         idx = 0
         while (idx < len(doclist)) and self.aborted is False:
             self.context.sync.get_document_characteristics(doclist[idx])
-            self.signals.progress.emit((idx + 1, "", doclist[idx],0))
+            self.signals.progress.emit((idx + 1, "", doclist[idx], 0))
             idx += 1
         if self.aborted is False:
             self.signals.finished.emit()
@@ -63,7 +66,8 @@ class SyncWorker(BasicWorker):
                 self.logger.error(f"Worker error : {error}")
             self.signals.progress.emit(
                 (idx + 1, WORKER_ACTION_DEL if success else WORKER_ACTION_ERR,
-                 self.context.infos["to_del"][idx], self.context.sync.count_local_files(self.context.infos["to_del"][idx]['domain']))
+                 self.context.infos["to_del"][idx],
+                 self.context.sync.count_local_files(self.context.infos["to_del"][idx]['domain']))
             )
             idx += 1
 
@@ -77,11 +81,13 @@ class SyncWorker(BasicWorker):
                 self.logger.error(f"Worker error : {error}")
             self.signals.progress.emit((idx + 1, WORKER_ACTION_DOWN if success else WORKER_ACTION_ERR,
                                         self.context.infos["to_download"][idx],
-                                        self.context.sync.count_local_files(self.context.infos["to_download"][idx]['domain'])))
+                                        self.context.sync.count_local_files(
+                                            self.context.infos["to_download"][idx]['domain'])))
             idx += 1
 
         if self.aborted is False:
             self.signals.finished.emit()
+
 
 class NetworkWorker(BasicWorker):
     def __init__(self, ip, port, delay):

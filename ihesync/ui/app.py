@@ -74,9 +74,10 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.logger.info("Starts with %d threads" % self.threadpool.maxThreadCount())
 
     def main(self):
+        conf_loaded = self.context.load_configuration()
+
         self.show()
         self.start_network_watchdog()
-        conf_loaded = self.context.load_configuration()
 
         if not conf_loaded:
             self.change_status("Configuration loading error : check network")
@@ -126,9 +127,15 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             self.network_label.setStyleSheet('border: 0; color:  red;')
 
     def start_network_watchdog(self):
-        self.network_watchdog = sync_worker.NetworkWorker("9.9.9.9", 53, 30)
+        (ip, port) = self.context.sync.ping_address
+        self.logger.debug(f"Start watchdog ip={ip} port={port} delay={self.context.sync.ping_delay}")
+        self.network_watchdog = sync_worker.NetworkWorker(ip, port, self.context.sync.ping_delay)
         self.network_watchdog.signals.progress.connect(self.update_network_status)
         self.threadpool.start(self.network_watchdog)
+
+    def stop_network_watchdog(self):
+        self.logger.debug("Stop network watchdog...")
+        self.network_watchdog.abort()
 
     # -- Refresh counts
 
@@ -146,7 +153,13 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
                 self.context.sync.last_check.strftime("%Y-%m-%d %H:%M")
             )
 
-    def refresh_domain_list(self):
+    def refresh_domain_list(self) -> None:
+        """
+            Refresh the domain table
+                - sorted by domain name
+                - get the count of local files
+        :return:
+        """
         self.logger.info("refresh_domain_list")
         self.doc_model.log()
 
@@ -158,6 +171,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         data = []
         for domain in domains:
             local_count = self.context.sync.count_local_files(domain["name"])
+
             data.append(
                 {
                     "checked": domain["selected"],
@@ -177,7 +191,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.doc_model.set_documents(data)
         self.tableView.model().layoutChanged.emit()
 
-    def refresh_configuration(self):
+    def refresh_configuration(self) -> None:
         self.textConfDir.setText(str(self.context.conf_directory))
         self.textDocDir.setText(str(self.context.doc_directory))
         self.newDocsGroupBox.setVisible(False)
@@ -186,8 +200,16 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         rad = dict(INFO=self.infoRadioButton, ERROR=self.errorRadioButton, DEBUG=self.debugRadioButton)
         if self.context.sync.log_level in rad:
             rad[self.context.sync.log_level].setChecked(True)
+        (ip, port)=self.context.sync.ping_address
+        self.textPingIPaddress.setText(ip)
+        self.textPingPort.setText(str(port))
+        self.textPingDelay.setText(str(self.context.sync.ping_delay))
 
-    def refresh_counts(self):
+    def refresh_counts(self) -> None:
+        """
+            Refresh counters and date last checked
+        :return:
+        """
         self.newDocsGroupBox.setVisible(False)
         self.refresh_last_checked()
         self.labelDocumentCountValue.setText(str(self.context.file_count))
@@ -283,6 +305,30 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             self.msgbox_network_unavailable()
 
     @pyqtSlot()
+    def on_changeConnectionPushButton_clicked(self):
+        # get values before change
+        (new_ip, new_port) = self.context.sync.ping_address
+        new_delay = self.context.sync.ping_delay
+        new_ip = self.textPingIPaddress.toPlainText()
+        try:
+            new_port = int(self.textPingPort.toPlainText())
+        except ValueError as p_err:
+            self.change_status("Port value must be numeric !!!", )
+            self.textPingPort.setText(str(new_port))
+        try:
+            new_delay = int(self.textPingDelay.toPlainText())
+        except ValueError as d_err:
+            self.change_status("Delay value must be numeric !!!")
+            self.textPingDelay.setText(str(new_delay))
+
+        if (new_ip, new_port) != self.context.sync.ping_address or new_delay != self.context.sync.ping_delay:
+            self.context.sync.ping_address = (new_ip, new_port)
+            self.context.sync.ping_delay = new_delay
+            self.stop_network_watchdog()
+            self.start_network_watchdog()
+            self.change_status("Ping informations changed.")
+
+    @pyqtSlot()
     def on_synchronize_confirmed(self):
         self.logger.info("on_synchronize_confirmed")
         self.do_synchronization()
@@ -300,7 +346,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         else:
             self.logger.info("No changes")
         event.accept()
-        self.network_watchdog.abort()
+        self.stop_network_watchdog()
 
     # -- > Actions --
     # --------------

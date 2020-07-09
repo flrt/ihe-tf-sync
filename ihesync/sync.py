@@ -34,6 +34,8 @@ DEFAULT_CONF_DIR = Path.home() / '.ihe-sync'
 DEFAULT_DOC_DIR = Path.home() / 'Documents' / 'ihe-documents'
 DEFAULT_LOG_FILENAME = "ihe-sync.log"
 DEFAULT_LOG_LEVEL = "DEBUG"
+DEFAULT_PING_ADDRESS = ('9.9.9.9',53)
+DEFAULT_PING_DELAY = 30
 META_TAG = "__meta__"
 
 
@@ -57,6 +59,8 @@ class Synchro:
         self.last_check = None
         self.domain_filter = []
         self.public_comment = False
+        self.ping_address = DEFAULT_PING_ADDRESS
+        self.ping_delay = DEFAULT_PING_DELAY
 
     def config_logging(self):
         logging.basicConfig(filename=str(DEFAULT_CONF_DIR / self.log_filename),
@@ -118,6 +122,18 @@ class Synchro:
                     self.log_filename = self.refdoc[META_TAG]["logfile"]
                 if "loglevel" in self.refdoc[META_TAG]:
                     self.log_level = self.refdoc[META_TAG]["loglevel"]
+                if "ping" in self.refdoc[META_TAG]:
+                    if "address" in self.refdoc[META_TAG]["ping"]:
+                        self.ping_address = self.refdoc[META_TAG]["ping"]
+                    else:
+                        self.ping_address = DEFAULT_PING_ADDRESS
+                    if "delay" in self.refdoc[META_TAG]["ping"]:
+                        self.ping_delay = self.refdoc[META_TAG]["delay"]
+                    else:
+                        self.ping_delay = DEFAULT_PING_DELAY
+                else:
+                    self.ping_delay = DEFAULT_PING_DELAY
+                    self.ping_address = DEFAULT_PING_ADDRESS
 
                 del self.refdoc[META_TAG]
                 self.logger.info(self.refdoc.keys())
@@ -294,7 +310,9 @@ class Synchro:
         sdoc = copy.deepcopy(self.doc)
         sdoc[META_TAG] = dict(last_check=self.last_check, public_comment=self.public_comment,
                               domains=self.domain_filter, outputdir=self.outputdir,
-                              logfile=self.log_filename, loglevel=self.log_level)
+                              logfile=self.log_filename, loglevel=self.log_level,
+                              ping=dict(address=self.ping_address, delay=self.ping_delay))
+
         helpers.save_json(filename, sdoc)
 
     def save_infos(self):
@@ -475,11 +493,19 @@ class Synchro:
 
         return False
 
-    def scan_local_dirs(self):
+    def scan_local_dirs(self) -> int:
         """
         Scan local repository and set information about documents already downloaded
 
         """
+        # clean previous informations about local files
+        for domain in list(filter(lambda k: k!="__meta__", self.doc.keys())):
+            for doc in self.doc[domain]:
+                if 'size' in doc:
+                    del doc['size']
+                if 'last-modified' in doc:
+                    del doc['last-modified']
+
         total = 0
         for root, dirs, files in os.walk(self.outputdir):
             relative_path = root[len(str(self.outputdir)) + 1:]
@@ -499,18 +525,8 @@ class Synchro:
                     total += 1
         return total
 
-    def count_local_files(self, domain):
-        """
-
-        """
-        dirname = os.path.join(self.outputdir, domain)
-        if os.path.exists(dirname):
-            if os.path.isdir(dirname):
-                return len(os.listdir(dirname))
-            else:
-                self.logger.error(f"I/O Erreur {dirname} is a file, a directory was expected !")
-        return 0
-
+    def count_local_files(self, domain) -> int:
+        return len(list(filter(lambda x: 'size' in self.doc[domain][x] or 'last-modified' in self.doc[domain][x], self.doc[domain])))
 
 def main():
     """

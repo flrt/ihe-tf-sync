@@ -60,7 +60,7 @@ class DocumentsModel(QAbstractTableModel):
         if data is not None and len(data):
             self.docs = data
         else:
-            self.docs = []
+            self.docs.clear()
 
     def data(self, index: QModelIndex, role: int = ...) -> typing.Any:
         r, c = index.row(), index.column()
