@@ -52,6 +52,8 @@ class DocumentsModel(QAbstractTableModel):
             documents["link"] = documents["local"] > 0
 
     def summary(self):
+        print("DOC MODEL : SUMM")
+        print(self.docs)
         error = sum(list(map(lambda x: x["error"], self.docs)))
         downloaded = sum(list(map(lambda x: x["down"], self.docs)))
         return downloaded, error

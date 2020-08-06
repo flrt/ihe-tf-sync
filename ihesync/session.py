@@ -101,7 +101,7 @@ class Context:
         dom = []
         for k in sorted(conf.keys()):
             downloaded = len(list(filter(lambda x: "size" in x, conf[k].values())))
-            dom.append(dict(name=k, selected=downloaded > 0,
+            dom.append(dict(name=k, checked=downloaded > 0,
                             files=len(conf[k]), downloaded=downloaded))
         return dom
 

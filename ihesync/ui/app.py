@@ -168,13 +168,14 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.doc_model.set_documents(None)
 
         domains = sorted(self.context.domains, key=lambda v: v["name"])
+        self.logger.info(f" >> context.domains >> {self.context.domains}")
         data = []
         for domain in domains:
             local_count = self.context.sync.count_local_files(domain["name"])
 
             data.append(
                 {
-                    "checked": domain["selected"],
+                    "checked": domain["name"] in self.context.selected_domains,
                     "domain": domain["name"],
                     "title": DOMAIN_DICT[domain["name"]]
                     if domain["name"] in DOMAIN_DICT
@@ -210,6 +211,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             Refresh counters and date last checked
         :return:
         """
+        self.logger.info("refresh_counts")
         self.newDocsGroupBox.setVisible(False)
         self.refresh_last_checked()
         self.labelDocumentCountValue.setText(str(self.context.file_count))
@@ -394,7 +396,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
         worker.signals.finished.connect(sd.accept)
         worker.signals.finished.connect(self.sync_finished)
-        # worker.signals.progress.connect(self.doc_model.update_documents)
+        worker.signals.progress.connect(self.doc_model.update_documents)
         worker.signals.aborted.connect(sd.reject)
         sd.main(worker)
         self.threadpool.start(worker)
@@ -406,6 +408,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
     def sync_finished(self):
         downloaded, error = self.doc_model.summary()
+        print(f"down {downloaded}")
         self.change_status(f"{downloaded} download(s), {error} error(s)")
 
     # -- < Actions

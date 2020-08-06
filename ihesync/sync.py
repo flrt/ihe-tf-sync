@@ -34,7 +34,7 @@ DEFAULT_CONF_DIR = Path.home() / '.ihe-sync'
 DEFAULT_DOC_DIR = Path.home() / 'Documents' / 'ihe-documents'
 DEFAULT_LOG_FILENAME = "ihe-sync.log"
 DEFAULT_LOG_LEVEL = "DEBUG"
-DEFAULT_PING_ADDRESS = ('9.9.9.9',53)
+DEFAULT_PING_ADDRESS = ('9.9.9.9', 53)
 DEFAULT_PING_DELAY = 30
 META_TAG = "__meta__"
 
@@ -499,7 +499,7 @@ class Synchro:
 
         """
         # clean previous informations about local files
-        for domain in list(filter(lambda k: k!="__meta__", self.doc.keys())):
+        for domain in list(filter(lambda k: k != "__meta__", self.doc.keys())):
             for doc in self.doc[domain]:
                 if 'size' in doc:
                     del doc['size']
@@ -518,7 +518,8 @@ class Synchro:
 
                     # copy the etag metadata of the previous downloaded file
 
-                    if 'size' in self.refdoc[relative_path][name] and self.doc[relative_path][name]["size"] == self.refdoc[relative_path][name]["size"]:
+                    if 'size' in self.refdoc[relative_path][name] and self.doc[relative_path][name]["size"] == \
+                            self.refdoc[relative_path][name]["size"]:
                         if "etag" in self.refdoc[relative_path][name]:
                             self.doc[relative_path][name]["etag"] = self.refdoc[relative_path][name]["etag"]
 
@@ -526,7 +527,9 @@ class Synchro:
         return total
 
     def count_local_files(self, domain) -> int:
-        return len(list(filter(lambda x: 'size' in self.doc[domain][x] or 'last-modified' in self.doc[domain][x], self.doc[domain])))
+        return len(list(filter(lambda x: 'size' in self.doc[domain][x] or 'last-modified' in self.doc[domain][x],
+                               self.doc[domain])))
+
 
 def main():
     """
