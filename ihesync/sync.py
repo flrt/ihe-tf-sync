@@ -71,6 +71,7 @@ class Synchro:
             self.log_level = level
         if filename is not None:
             if logging.getLogger().hasHandlers():
+                print("update hashandler")
                 for h in logging.getLogger().handlers:
                     if isinstance(h, logging.FileHandler) and h.baseFilename.endswith(self.log_filename):
                         logging.getLogger().removeHandler(h)
@@ -79,11 +80,10 @@ class Synchro:
             self.config_logging()
 
     def load_configuration(self):
-        # Load previous configuration if present
+        # Load previous configuration if presen
         docfilename = os.path.join(self.configdir, DOC_INFO_FILENAME)
         self.refdoc = helpers.load_json(docfilename)
         self.get_meta()
-        self.logger.info(f"AFTER get_meta {self.domain_filter}")
         self.config_logging()
 
     def save_configuration(self):
@@ -124,12 +124,11 @@ class Synchro:
                     self.log_level = self.refdoc[META_TAG]["loglevel"]
                 if "ping" in self.refdoc[META_TAG]:
                     if "address" in self.refdoc[META_TAG]["ping"]:
-                        self.ping_address = self.refdoc[META_TAG]["ping"]["address"]
+                        self.ping_address = self.refdoc[META_TAG]["ping"]
                     else:
                         self.ping_address = DEFAULT_PING_ADDRESS
-
                     if "delay" in self.refdoc[META_TAG]["ping"]:
-                        self.ping_delay = self.refdoc[META_TAG]["ping"]["delay"]
+                        self.ping_delay = self.refdoc[META_TAG]["delay"]
                     else:
                         self.ping_delay = DEFAULT_PING_DELAY
                 else:
@@ -346,19 +345,24 @@ class Synchro:
 
         :return : True if documents are different
         """
-        self.logger.debug(f"is_different : {keydoc}")
-        try:
-            if not ("etag" in self.refdoc[domain][keydoc] and "etag" in self.doc[domain][keydoc]):
-                return False
-            if not ("size" in self.refdoc[domain][keydoc] and "size" in self.doc[domain][keydoc]):
-                return False
-            return (
-                    self.doc[domain][keydoc]["etag"] != self.refdoc[domain][keydoc]["etag"]
-                    and self.doc[domain][keydoc]["size"] != self.refdoc[domain][keydoc]["size"]
-            )
-        except KeyError as kerr:
-            self.logger.warning(f"is_different {keydoc}: key {kerr} not found -> different")
-            return True
+        self.logger.info(f"is_different : {keydoc}")
+        if "etag" in self.refdoc[domain][keydoc]:
+            self.logger.info(f'etag ref : {self.refdoc[domain][keydoc]["etag"]}')
+        if "etag" in self.doc[domain][keydoc]:
+            self.logger.info(f'etag current : {self.doc[domain][keydoc]["etag"]}')
+        if "size" in self.refdoc[domain][keydoc]:
+            self.logger.info(f'size ref : {self.refdoc[domain][keydoc]["size"]}')
+        if "size" in self.doc[domain][keydoc]:
+            self.logger.info(f'size current : {self.doc[domain][keydoc]["size"]}')
+
+        if not ("etag" in self.refdoc[domain][keydoc] and "etag" in self.doc[domain][keydoc]):
+            return False
+        if not ("size" in self.refdoc[domain][keydoc] and "size" in self.doc[domain][keydoc]):
+            return False
+        return (
+                self.doc[domain][keydoc]["etag"] != self.refdoc[domain][keydoc]["etag"]
+                and self.doc[domain][keydoc]["size"] != self.refdoc[domain][keydoc]["size"]
+        )
 
     def prepare_sync(self, remote_check=True):
         self.logger.info(f"sync : prepare-sync : {self.domain_filter} remote check {remote_check}")
@@ -462,7 +466,6 @@ class Synchro:
 
             # suppress metatags also : etag, last-modified, size
             d = self.doc[docinfo['domain']][docinfo['filename']]
-            self.logger.info(f"sync::delete d={d}")
             for key in ['etag', 'last-modified', 'size']:
                 if key in d:
                     del d[key]
@@ -513,23 +516,17 @@ class Synchro:
                     self.doc[relative_path][name]["size"] = r.st_size
                     self.doc[relative_path][name]["last-modified"] = r.st_size
 
-                    if relative_path not in self.domain_filter:
-                        self.domain_filter.append(relative_path)
                     # copy the etag metadata of the previous downloaded file
-                    try:
-                        if self.doc[relative_path][name]["size"] == self.refdoc[relative_path][name]["size"]:
+
+                    if 'size' in self.refdoc[relative_path][name] and self.doc[relative_path][name]["size"] == \
+                            self.refdoc[relative_path][name]["size"]:
+                        if "etag" in self.refdoc[relative_path][name]:
                             self.doc[relative_path][name]["etag"] = self.refdoc[relative_path][name]["etag"]
-                    except KeyError as kerr:
-                        self.logger.warning(f"Unkown local file {name} ({relative_path} : error {kerr}")
 
                     total += 1
-
-        self.logger.info(f"END scan_local_dirs {self.domain_filter}")
-
         return total
 
     def count_local_files(self, domain) -> int:
-
         return len(list(filter(lambda x: 'size' in self.doc[domain][x] or 'last-modified' in self.doc[domain][x],
                                self.doc[domain])))
 

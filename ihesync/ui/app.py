@@ -5,16 +5,35 @@ import webbrowser
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import pyqtSlot, QThreadPool
-from PyQt5.QtWidgets import QFileDialog, QMessageBox, QLabel, QFrame, QStyleOptionViewItem
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QLabel, QFrame
 
 from ihesync import session
 from ihesync.ui import ihesync_app
 from ihesync.ui import documents_model
 from ihesync.ui import dialogs
 from ihesync.ui import sync_worker
-from ihesync import DOMAIN_DICT
 
 __version__ = 1.0
+DOMAIN_DICT = {
+    "CARD": "Cardiology",
+    "DENT": "Dental",
+    "ENDO": "Endoscopy",
+    "EYECARE": "Eye Care",
+    "ITI": "IT Infrastructure",
+    "LAB": "Laboratory (obsolete see PALM)",
+    "PALM": "Pathology and Laboratory Medicine",
+    "PAT": "Anatomic Pathology",
+    "PCC": "Patient Care Coordination",
+    "PCD": "Patient Care Device",
+    "PHARMACY": "Pharmacy",
+    "PHDSC": "Public Health Data Standards Consortium",
+    "QRPH": "Quality, Research and Public Health",
+    "QUALITY": "Quality",
+    "RAD": "Radiology",
+    "RO": "Radiation Oncology",
+    "SUPPL": "Supplements",
+    "TF": "other",
+}
 
 
 class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
@@ -64,7 +83,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             self.change_status("Configuration loading error : check network")
 
         self.refresh_configuration()
-        self.refresh_information_counts()
+        self.refresh_counts()
         self.refresh_domain_list()
 
         if self.context.local_file_count_ondisk != self.context.local_file_count:
@@ -82,13 +101,17 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
                 f" Sync needed"
             ),
         )
-        msg.setIcon(QMessageBox.Warning)
+        # msg.setIcon(QMessageBox.Warning)
 
     def msgbox_network_unavailable(self):
-        QMessageBox.critical(self,
-                             "Network unavailable", (
-                                 f"No network"
-                                 f" Check\n"), )
+        msg = QMessageBox.critical(
+            self,
+            "Network unavailable",
+            (
+                f"No network"
+                f" Check\n"
+            ),
+        )
 
     # -- Messages boxes ---
 
@@ -125,10 +148,6 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.checkComments.setCheckState(state)
 
     def refresh_last_checked(self):
-        """
-            Refresh date of the last check
-        :return: -
-        """
         if self.context.sync.last_check:
             self.labelLastCheckDate.setText(
                 self.context.sync.last_check.strftime("%Y-%m-%d %H:%M")
@@ -148,14 +167,15 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
         self.doc_model.set_documents(None)
 
+        domains = sorted(self.context.domains, key=lambda v: v["name"])
+        self.logger.info(f" >> context.domains >> {self.context.domains}")
         data = []
-        for domain in sorted(self.context.domains, key=lambda v: v["name"]):
-            self.logger.debug(f"> domain >> {domain}")
+        for domain in domains:
             local_count = self.context.sync.count_local_files(domain["name"])
 
             data.append(
                 {
-                    "checked": domain["name"] in self.context.selected_domains or domain["checked"],
+                    "checked": domain["name"] in self.context.selected_domains,
                     "domain": domain["name"],
                     "title": DOMAIN_DICT[domain["name"]]
                     if domain["name"] in DOMAIN_DICT
@@ -168,14 +188,11 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
                 }
             )
 
+        self.logger.info(data)
         self.doc_model.set_documents(data)
         self.tableView.model().layoutChanged.emit()
 
     def refresh_configuration(self) -> None:
-        """
-            Refresh the configuration tab
-        :return: -
-        """
         self.textConfDir.setText(str(self.context.conf_directory))
         self.textDocDir.setText(str(self.context.doc_directory))
         self.newDocsGroupBox.setVisible(False)
@@ -184,25 +201,24 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         rad = dict(INFO=self.infoRadioButton, ERROR=self.errorRadioButton, DEBUG=self.debugRadioButton)
         if self.context.sync.log_level in rad:
             rad[self.context.sync.log_level].setChecked(True)
-        (ip, port) = self.context.sync.ping_address
+        (ip, port)=self.context.sync.ping_address
         self.textPingIPaddress.setText(ip)
         self.textPingPort.setText(str(port))
         self.textPingDelay.setText(str(self.context.sync.ping_delay))
 
-    def refresh_information_counts(self) -> None:
+    def refresh_counts(self) -> None:
         """
             Refresh counters and date last checked
         :return:
         """
-        self.logger.debug("refresh_counts")
+        self.logger.info("refresh_counts")
         self.newDocsGroupBox.setVisible(False)
         self.refresh_last_checked()
-        self.context.scan_local_dirs()
-        self.context.refresh_counts_current()
         self.labelDocumentCountValue.setText(str(self.context.file_count))
         self.labelLocalFilesCountValue.setText(str("{}/{}"
                                                    .format(self.context.local_file_count_ondisk,
                                                            self.context.local_file_count)))
+        self.refresh_domain_list()
         diff = self.context.check_updates_available()
         if diff > 0:
             self.newDocLabel.setText(f"{diff} document changes")
@@ -279,6 +295,11 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.change_status(changed=True)
 
     @pyqtSlot()
+    def on_reloadConfButton_clicked(self):
+        self.context.load_configuration()
+        self.refresh_counts()
+
+    @pyqtSlot()
     def on_syncButton_clicked(self):
         if self.network_available:
             self.prepare_synchronization()
@@ -295,13 +316,11 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             new_port = int(self.textPingPort.toPlainText())
         except ValueError as p_err:
             self.change_status("Port value must be numeric !!!", )
-            self.logger.error(f"Configuration error while setting non numeric value for port {p_err}")
             self.textPingPort.setText(str(new_port))
         try:
             new_delay = int(self.textPingDelay.toPlainText())
         except ValueError as d_err:
             self.change_status("Delay value must be numeric !!!")
-            self.logger.error(f"Configuration error while setting non numeric value for delay {d_err}")
             self.textPingDelay.setText(str(new_delay))
 
         if (new_ip, new_port) != self.context.sync.ping_address or new_delay != self.context.sync.ping_delay:
@@ -313,7 +332,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
     @pyqtSlot()
     def on_synchronize_confirmed(self):
-        self.logger.debug("on_synchronize_confirmed")
+        self.logger.info("on_synchronize_confirmed")
         self.do_synchronization()
 
     @pyqtSlot()
@@ -335,14 +354,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     # --------------
 
     def prepare_synchronization(self):
-        """
-            get the selected domains
-            prepare elements to sync
-            launch the UI dialog showing the compute of sync
-        :return:
-        """
         # get selected domains
-        self.logger.debug("prepare_synchronization")
         domains = self.doc_model.checked()
         self.logger.info(domains)
         self.context.prepare_sync(domains)
@@ -358,10 +370,6 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.threadpool.start(worker)
 
     def synchronize_dialog(self):
-        """
-            Launch UI for synchro
-        :return:
-        """
         if self.network_available:
             sd = dialogs.SyncDialog(parent=self)
             sd.confirm_signal.connect(self.on_synchronize_confirmed)
@@ -394,19 +402,14 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.threadpool.start(worker)
 
         self.context.confirm_sync()
+        self.context.refresh_counts_current()
+        self.context.scan_local_dirs()
+        self.refresh_counts()
 
     def sync_finished(self):
-        """
-            Syncho done.
-            - display information in status bar
-            - refresh informations counts
-            - refresh doc table information
-        """
         downloaded, error = self.doc_model.summary()
+        print(f"down {downloaded}")
         self.change_status(f"{downloaded} download(s), {error} error(s)")
-
-        self.refresh_information_counts()
-        self.tableView.model().layoutChanged.emit()
 
     # -- < Actions
 

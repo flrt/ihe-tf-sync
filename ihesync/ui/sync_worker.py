@@ -98,11 +98,11 @@ class NetworkWorker(BasicWorker):
         self.delay = delay
 
     def run(self):
-        while not self.aborted:
+        while self.aborted == False:
             self.signals.progress.emit((self.ip, self.is_connected()))
             for tick in range(self.delay):
                 time.sleep(1)
-                if self.aborted:
+                if self.aborted == True:
                     break
 
     def is_connected(self):

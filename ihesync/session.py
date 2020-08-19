@@ -3,6 +3,7 @@ import logging
 
 from ihesync import sync
 
+
 class Context:
     """
     Context for the synchronization process
@@ -43,7 +44,6 @@ class Context:
         self.sync = sync.Synchro(self.doc_directory, self.conf_directory, conf)
         self.sync.load_configuration()
         self.initial_domains = self.sync.domain_filter[:]
-        self.selected_domains = self.sync.domain_filter[:]
         self.logger.info(f"Initial domains : {self.initial_domains}")
         retcode &= self.sync.doc_cartography()
 
@@ -75,27 +75,12 @@ class Context:
         self.local_file_count_ondisk = self.sync.scan_local_dirs()
 
     def refresh_counts_ref(self):
-        """
-            Refresh counts with loaded configuration
-        :return:
-        """
         self.refresh_counts(self.sync.refdoc)
 
     def refresh_counts_current(self):
-        """
-            Refresh counts with current doc dict
-        :return:
-        """
         self.refresh_counts(self.sync.doc)
 
     def refresh_counts(self, src_doc):
-        """
-            Set the count of
-            - remote files
-            - local files (downloaded files)
-        :param src_doc: dict of docs
-        :return: -
-        """
         counts = [len(list(v.values())) for k, v in src_doc.items()]
         self.file_count = sum(counts)
 
@@ -112,12 +97,6 @@ class Context:
         """
             Build an information dict by analyzing the whole configuration (documents)
             Get the domain names, the files available count, and the downloaded files count
-            keys :
-                - name,
-                - checked
-                - downloaded
-                - files
-
         """
         dom = []
         for k in sorted(conf.keys()):
@@ -127,16 +106,26 @@ class Context:
         return dom
 
     def prepare_sync(self, domains=[]):
-        self.selected_domains = domains[:]
+        self.selected_domains = domains
         self.infos = dict(old_domain=self.initial_domains[:], new_domain=domains[:])
         self.sync.domain_filter = domains
         self.infos['to_del'], self.infos['to_download'] = self.sync.prepare_sync(remote_check=False)
 
     def revert_sync(self):
-        self.sync.domain_filter = self.initial_domains[:]
+        self.sync.domain_filter = self.initial_domains
 
     def confirm_sync(self):
         self.initial_domains = self.selected_domains[:]
+
+    def log(self):
+        self.logger.info(f'sync - original domains {self.initial_domains} | '
+              f'sync - selected domains {self.selected_domains}'
+              )
+        self.logger.info(f'sync -> {self.infos}')
+        #        helpers.save_json("/tmp/refdoc_sync2.conf", self.sy.refdoc)
+        #        helpers.save_json("/tmp/doc_sync2.conf", self.sy.doc)
+        [self.logger.info(f"-- {d['filename']}") for d in self.infos['to_del']]
+        [self.logger.info(f"++ {d['filename']}") for d in self.infos['to_download']]
 
     def local_path_domain(self, domain):
         return os.path.join(self.sync.outputdir, domain)
@@ -146,19 +135,9 @@ class Context:
             check if some documents are newly available
         :return: change count
         """
-        self.logger.debug("check_updates_available")
         change_count=0
         for domain in self.initial_domains:
-            self.logger.info(f"domain={domain} = {len(self.sync.doc[domain])} / {len(self.sync.refdoc[domain])}")
             diff = abs(len(self.sync.doc[domain]) - len(self.sync.refdoc[domain]))
             if diff>0:
                 change_count += diff
         return change_count
-
-    def log(self):
-        self.logger.info(f'sync - original domains {self.initial_domains} | '
-                         f'sync - selected domains {self.selected_domains}'
-                         )
-        self.logger.info("Context domains >>")
-        for i, v in enumerate(self.domains):
-            self.logger.info(f"{i} {v}")

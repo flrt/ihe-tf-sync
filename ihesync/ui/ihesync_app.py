@@ -9,7 +9,6 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from ihesync.ui import resources_rc
 
 
 class Ui_MainWindow(object):
@@ -70,7 +69,7 @@ class Ui_MainWindow(object):
         self.syncButton.setIcon(icon1)
         self.syncButton.setObjectName("syncButton")
         self.tableView = QtWidgets.QTableView(self.tabDomains)
-        self.tableView.setGeometry(QtCore.QRect(260, 20, 511, 571))
+        self.tableView.setGeometry(QtCore.QRect(280, 20, 491, 571))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.tableView.setFont(font)
@@ -83,7 +82,7 @@ class Ui_MainWindow(object):
         self.labelLastCheckDate.setText("")
         self.labelLastCheckDate.setObjectName("labelLastCheckDate")
         self.newDocsGroupBox = QtWidgets.QGroupBox(self.tabDomains)
-        self.newDocsGroupBox.setGeometry(QtCore.QRect(10, 510, 241, 80))
+        self.newDocsGroupBox.setGeometry(QtCore.QRect(10, 510, 261, 80))
         self.newDocsGroupBox.setObjectName("newDocsGroupBox")
         self.newDocLabel = QtWidgets.QLabel(self.newDocsGroupBox)
         self.newDocLabel.setGeometry(QtCore.QRect(50, 40, 191, 20))
@@ -259,7 +258,7 @@ class Ui_MainWindow(object):
         self.labelRefreshDelay_2.setText(_translate("MainWindow", "seconds"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("MainWindow", "configuration"))
         self.label_ihewebsite.setText(_translate("MainWindow", "TextLabel"))
-
+from ihesync.ui import resources_rc
 
 
 if __name__ == "__main__":
