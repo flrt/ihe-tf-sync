@@ -28,7 +28,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tabDomains">
      <attribute name="title">
@@ -146,9 +146,9 @@
      <widget class="QTableView" name="tableView">
       <property name="geometry">
        <rect>
-        <x>280</x>
+        <x>260</x>
         <y>20</y>
-        <width>491</width>
+        <width>511</width>
         <height>571</height>
        </rect>
       </property>
@@ -189,7 +189,7 @@
        <rect>
         <x>10</x>
         <y>510</y>
-        <width>261</width>
+        <width>241</width>
         <height>80</height>
        </rect>
       </property>
