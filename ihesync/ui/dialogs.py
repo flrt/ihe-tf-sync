@@ -1,9 +1,10 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot
 
-from ihesync.ui import progress_dialog
 from ihesync.ui import about_dialog
+from ihesync.ui import progress_dialog
 from ihesync.ui import sync_dialog
+
 
 class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
     confirm_signal = QtCore.pyqtSignal()
@@ -32,8 +33,8 @@ class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
             newd = ", ".join(self.new_domains) if self.new_domains else "<i>none</i>"
             oldd = ", ".join(self.old_domains) if self.old_domains else "<i>none</i>"
             if (
-                len(set(self.old_domains) - set(self.new_domains)) > 0
-                or len(set(self.new_domains) - set(self.old_domains)) > 0
+                    len(set(self.old_domains) - set(self.new_domains)) > 0
+                    or len(set(self.new_domains) - set(self.old_domains)) > 0
             ):
                 txt = (
                     f'<p>Previous domains: <code style="color:blue">{oldd}</code>'
@@ -73,6 +74,7 @@ class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
 
         self.show()
 
+
 class ProgressSyncDialog(QtWidgets.QDialog):
     # confirm_signal = QtCore.pyqtSignal(object)
     REMOTE_INFO_TEXT = "Get remote informations about document "
@@ -111,5 +113,6 @@ class AboutDialog(QtWidgets.QDialog):
         super(AboutDialog, self).__init__(parent)
         self.ui = about_dialog.Ui_Dialog()
         self.ui.setupUi(self)
+
     def main(self, worker=None):
         self.show()

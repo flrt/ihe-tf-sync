@@ -21,7 +21,7 @@ class DocumentsModel(QAbstractTableModel):
 
     def log(self):
         for i, v in enumerate(self.docs):
-            self.logger.info(f"{v['domain']} = {v['checked']}")
+            self.logger.info(f"model : {i} -> {v}")
 
     def checked(self) -> list:
         return list(
@@ -37,7 +37,7 @@ class DocumentsModel(QAbstractTableModel):
     def update_documents(self, val):
         (idx, action, docinfo, local_count) = val
         self.logger.info(
-            f"update_documents > idx={idx} action={action} docinfo={docinfo}"
+            f"update_documents > idx={idx} action={action} local_count= {local_count} docinfo={docinfo}"
         )
         for documents in self.docs:
             if documents["domain"] == docinfo["domain"]:
@@ -47,13 +47,11 @@ class DocumentsModel(QAbstractTableModel):
                     documents["down"] += 1
                 elif action == sync_worker.WORKER_ACTION_ERR:
                     documents["error"] += 1
-            documents["local"]=local_count
+                documents["local"] = local_count
 
-            documents["link"] = documents["local"] > 0
+                documents["link"] = documents["local"] > 0
 
     def summary(self):
-        print("DOC MODEL : SUMM")
-        print(self.docs)
         error = sum(list(map(lambda x: x["error"], self.docs)))
         downloaded = sum(list(map(lambda x: x["down"], self.docs)))
         return downloaded, error
@@ -80,8 +78,6 @@ class DocumentsModel(QAbstractTableModel):
             if c == 1 and self.docs[r]["down"] > 0:
                 if self.docs[r]["down"] != self.docs[r]["local"]:
                     return ERR_COUNT_BACKGROUND_COLOR
-                else:
-                    return DOWNLOADED_BACKGROUND_COLOR
 
         if role == Qt.EditRole:
             return None
