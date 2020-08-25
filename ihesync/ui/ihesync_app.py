@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ihesync_app.ui'
+# Form implementation generated from reading ui file 'ihesync\ui\ihesync_app.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.0
 #
@@ -9,20 +9,19 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from ihesync.ui import resources_rc
 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 720)
+        MainWindow.resize(820, 840)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/img/book_ihe.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(":/img/3_books_64x64.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
-        self.tabWidget.setGeometry(QtCore.QRect(10, 40, 780, 630))
+        self.tabWidget.setGeometry(QtCore.QRect(5, 40, 810, 750))
         self.tabWidget.setObjectName("tabWidget")
         self.tabDomains = QtWidgets.QWidget()
         self.tabDomains.setObjectName("tabDomains")
@@ -30,13 +29,13 @@ class Ui_MainWindow(object):
         self.checkComments.setGeometry(QtCore.QRect(10, 250, 210, 30))
         self.checkComments.setObjectName("checkComments")
         self.groupBox = QtWidgets.QGroupBox(self.tabDomains)
-        self.groupBox.setGeometry(QtCore.QRect(10, 90, 241, 141))
+        self.groupBox.setGeometry(QtCore.QRect(10, 90, 220, 141))
         self.groupBox.setObjectName("groupBox")
         self.gridLayoutWidget = QtWidgets.QWidget(self.groupBox)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 29, 221, 101))
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 29, 201, 101))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
-        self.gridLayout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
+        self.gridLayout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
         self.labelDocumentCount = QtWidgets.QLabel(self.gridLayoutWidget)
@@ -70,20 +69,22 @@ class Ui_MainWindow(object):
         self.syncButton.setIcon(icon1)
         self.syncButton.setObjectName("syncButton")
         self.tableView = QtWidgets.QTableView(self.tabDomains)
-        self.tableView.setGeometry(QtCore.QRect(260, 20, 511, 571))
+        self.tableView.setGeometry(QtCore.QRect(240, 10, 560, 700))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.tableView.setFont(font)
+        self.tableView.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.tableView.setObjectName("tableView")
+        self.tableView.horizontalHeader().setStretchLastSection(False)
         self.groupBox_2 = QtWidgets.QGroupBox(self.tabDomains)
-        self.groupBox_2.setGeometry(QtCore.QRect(10, 20, 241, 51))
+        self.groupBox_2.setGeometry(QtCore.QRect(10, 20, 220, 51))
         self.groupBox_2.setObjectName("groupBox_2")
         self.labelLastCheckDate = QtWidgets.QLabel(self.groupBox_2)
-        self.labelLastCheckDate.setGeometry(QtCore.QRect(10, 25, 221, 20))
+        self.labelLastCheckDate.setGeometry(QtCore.QRect(10, 25, 200, 20))
         self.labelLastCheckDate.setText("")
         self.labelLastCheckDate.setObjectName("labelLastCheckDate")
         self.newDocsGroupBox = QtWidgets.QGroupBox(self.tabDomains)
-        self.newDocsGroupBox.setGeometry(QtCore.QRect(10, 510, 241, 80))
+        self.newDocsGroupBox.setGeometry(QtCore.QRect(10, 510, 220, 80))
         self.newDocsGroupBox.setObjectName("newDocsGroupBox")
         self.newDocLabel = QtWidgets.QLabel(self.newDocsGroupBox)
         self.newDocLabel.setGeometry(QtCore.QRect(50, 40, 191, 20))
@@ -212,7 +213,7 @@ class Ui_MainWindow(object):
         self.label_ihewebsite.setObjectName("label_ihewebsite")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 29))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 820, 26))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -259,14 +260,4 @@ class Ui_MainWindow(object):
         self.labelRefreshDelay_2.setText(_translate("MainWindow", "seconds"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabConf), _translate("MainWindow", "configuration"))
         self.label_ihewebsite.setText(_translate("MainWindow", "TextLabel"))
-
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+from ihesync.ui import resources_rc

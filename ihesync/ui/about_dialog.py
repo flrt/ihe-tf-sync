@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'about_dialog.ui'
+# Form implementation generated from reading ui file 'ihesync\ui\about_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.0
 #
@@ -15,8 +15,11 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(547, 376)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/img/3_books_64x64.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        Dialog.setWindowIcon(icon)
         self.verticalLayoutWidget = QtWidgets.QWidget(Dialog)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 546, 371))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 897, 887))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -24,8 +27,9 @@ class Ui_Dialog(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.label = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.label.setMaximumSize(QtCore.QSize(128, 128))
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap(":/img/book_ihe_64.png"))
+        self.label.setPixmap(QtGui.QPixmap(":/img/3_books_64x64.png"))
         self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
         self.aboutLabel = QtWidgets.QLabel(self.verticalLayoutWidget)
@@ -55,18 +59,8 @@ class Ui_Dialog(object):
         self.textEdit.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'Ubuntu\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background-color:#ffffff;\"><span style=\" font-style:italic;\">ihe-sync</span> is a simple tool to keep locally all the documents in sync.<br />Please, visit the <a href=\"https://www.ihe.net\"><span style=\" text-decoration: underline; color:#2980b9;\">IHE website</span></a>.<br /><br />It\'s an open source project, by <a href=\"https://www.opikanoba.org\"><span style=\" text-decoration: underline; color:#2980b9;\">Frédéric Laurent</span></a> hosted on Github.<br />Feel free to contact me, report bug or ask for improvements.<br /></p>\n"
-"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background-color:#ffffff;\"><span style=\" background-color:#ffffff;\">These software is distributed under GPL License.</span><br />It uses :<br /> - Qt, pyqt5, requests, beautifulsoup4, html5lib, cx_Freeze</p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background-color:#ffffff;\"><span style=\" font-family:\'Ubuntu\'; font-size:11pt; font-style:italic;\">ihe-sync</span><span style=\" font-family:\'Ubuntu\'; font-size:11pt;\"> is a simple tool to keep locally all the documents in sync.<br />Please, visit the </span><a href=\"https://www.ihe.net\"><span style=\" font-family:\'Ubuntu\'; font-size:11pt; text-decoration: underline; color:#2980b9;\">IHE website</span></a><span style=\" font-family:\'Ubuntu\'; font-size:11pt;\">.<br /><br />It\'s an open source project, by </span><a href=\"https://www.opikanoba.org\"><span style=\" font-family:\'Ubuntu\'; font-size:11pt; text-decoration: underline; color:#2980b9;\">Frédéric Laurent</span></a><span style=\" font-family:\'Ubuntu\'; font-size:11pt;\"> hosted on Github.<br />Feel free to contact me, report bug or ask for improvements.<br /></span></p>\n"
+"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; background-color:#ffffff;\"><span style=\" font-family:\'Ubuntu\'; font-size:11pt; background-color:#ffffff;\">These software is distributed under GPL License.</span><span style=\" font-family:\'Ubuntu\'; font-size:11pt;\"><br />It uses :<br /> - Qt, pyqt5, requests, beautifulsoup4, html5lib, cx_Freeze</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Ubuntu\'; font-size:11pt;\"><br /></p></body></html>"))
 from ihesync.ui import resources_rc
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
-    ui = Ui_Dialog()
-    ui.setupUi(Dialog)
-    Dialog.show()
-    sys.exit(app.exec_())

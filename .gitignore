@@ -8,3 +8,5 @@ lib/
 lib64/
 share/
 bin/
+Scripts/
+build/

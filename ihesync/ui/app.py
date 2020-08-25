@@ -1,4 +1,5 @@
 import sys
+import platform
 import os
 import logging
 import webbrowser
@@ -13,6 +14,7 @@ from ihesync.ui import documents_model
 from ihesync.ui import dialogs
 from ihesync.ui import sync_worker
 from ihesync import DOMAIN_DICT
+from ihesync.ui import STYLES
 
 __version__ = 1.0
 
@@ -53,6 +55,9 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.tableView.setItemDelegateForColumn(4, icon_delegate)
         self.tableView.clicked.connect(self.open_documents_folder)
         self.logger.info("Starts with %d threads" % self.threadpool.maxThreadCount())
+
+        if platform.system() in STYLES:
+            self.setStyleSheet(STYLES[platform.system()])
 
     def main(self):
         conf_loaded = self.context.load_configuration()

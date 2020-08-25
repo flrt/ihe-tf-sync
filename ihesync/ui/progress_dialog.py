@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'progress_dialog.ui'
+# Form implementation generated from reading ui file 'ihesync\ui\progress_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.0
 #
@@ -15,6 +15,9 @@ class Ui_ProgressDialog(object):
     def setupUi(self, ProgressDialog):
         ProgressDialog.setObjectName("ProgressDialog")
         ProgressDialog.resize(397, 170)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/img/3_books_64x64.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        ProgressDialog.setWindowIcon(icon)
         self.verticalLayoutWidget = QtWidgets.QWidget(ProgressDialog)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 20, 371, 91))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
@@ -47,13 +50,4 @@ class Ui_ProgressDialog(object):
         self.labelProgress.setText(_translate("ProgressDialog", "TextLabel"))
         self.labelFilename.setText(_translate("ProgressDialog", "TextLabel"))
         self.abortButton.setText(_translate("ProgressDialog", "Abort !"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    ProgressDialog = QtWidgets.QDialog()
-    ui = Ui_ProgressDialog()
-    ui.setupUi(ProgressDialog)
-    ProgressDialog.show()
-    sys.exit(app.exec_())
+from ihesync.ui import resources_rc

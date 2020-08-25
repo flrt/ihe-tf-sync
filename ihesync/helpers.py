@@ -10,7 +10,6 @@ __version__ = "1.0"
 __copyright__ = "Copyright 2018, Frederic Laurent"
 __license__ = "MIT"
 
-
 import os.path
 import json
 import sys
@@ -20,6 +19,10 @@ import io
 import requests
 import shutil
 import pathlib
+import logging
+
+logger = logging.getLogger()
+
 
 def save_json(filename, data):
     bdir = os.path.dirname(filename)
@@ -28,6 +31,7 @@ def save_json(filename, data):
 
     with io.open(filename, "w") as fout:
         fout.write(json.dumps(data, sort_keys=True, indent=4, default=json_encoder))
+
 
 def load_json(filename):
     """
@@ -47,10 +51,11 @@ def load_json(filename):
                 udata = fin.read()
                 data = json.loads(udata.encode("utf-8"))
             except TypeError as msg_e:
-                sys.stderr.write("load_json_config typeError :%s" % msg_e)
+                logger.error("load_json_config typeError :%s" % msg_e)
             except JSONDecodeError as msg_j:
-                sys.stderr.write("load_json_config JSONdecode :%s" % msg_j)
+                logger.error("load_json_config JSONdecode :%s" % msg_j)
     return data
+
 
 def download(url, filename):
     """
@@ -58,7 +63,7 @@ def download(url, filename):
     :param url: URL a telecharger
     :param filename: fichier de destination
     """
-    success, error = True, ''
+    error = ''
 
     try:
         req = requests.get(url, stream=True)
@@ -66,15 +71,12 @@ def download(url, filename):
         with open(filename, "wb") as f:
             shutil.copyfileobj(req.raw, f)
     except FileNotFoundError as fnf:
-        success = False
         error = f"Error while downloading {url} - I/O Problem with {filename} : FileNotFound -> check path"
     except Exception as ex:
-        print(ex.__class__)
-        print(ex.__cause__)
-        print(ex.__context__)
-        success = False
         error = f"Error while downloading {url}. {str(ex)}"
-    return success, error, filename
+
+    return len(error) == 0, error, filename
+
 
 def json_encoder(obj):
     """JSON encoder for objects not serializable by default json code"""

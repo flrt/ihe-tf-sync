@@ -219,9 +219,9 @@ class Synchro:
                     doc["size"] = int(headreq.headers["Content-Length"])
                     doc["etag"] = headreq.headers["Etag"]
                 else:
-                    sys.stderr.write(f"Error {headreq.status_code} - URL={doc['href']}\n")
+                    self.logger.error(f"Error {headreq.status_code} - URL={doc['href']}\n")
             except Exception as ex:
-                sys.stderr.writelines([f"Error HEAD request {doc['href']}", str(ex), "\n"])
+                self.logger.error(f"Error HEAD request {doc['href']} exception {str(ex)}")
 
         return doc
 

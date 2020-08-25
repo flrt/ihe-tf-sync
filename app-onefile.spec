@@ -29,7 +29,7 @@ if sys.platform == 'darwin':
             upx=True,
             runtime_tmpdir=None,
             console=True,
-            icon='assets/icon.icns')
+            icon='ihesync/ui/img/3_books.icns')
 elif sys.platform == 'win32' or sys.platform == 'win64':
   exe = EXE(pyz,
             a.scripts,
@@ -42,7 +42,7 @@ elif sys.platform == 'win32' or sys.platform == 'win64':
             upx=True,
             runtime_tmpdir=None,
             console=False,
-            icon='assets/icon.ico')
+            icon='ihesync/ui/img/3_books.ico')
 elif sys.platform == 'linux':
   exe = EXE(pyz,
             a.scripts,
@@ -55,7 +55,7 @@ elif sys.platform == 'linux':
             upx=True,
             runtime_tmpdir=None,
             console=False,
-            icon='assets/icon.ico')
+            icon='ihesync/ui/img/3_books.ico')
 
 # Build a .app if on OS X
 if sys.platform == 'darwin':
@@ -64,4 +64,4 @@ if sys.platform == 'darwin':
                 info_plist={
                   'NSHighResolutionCapable': 'True'
                 },
-                icon='assets/icon.icns')
+                icon='ihesync/ui/img/3_books.icns')
