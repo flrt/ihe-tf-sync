@@ -83,7 +83,7 @@ class Synchro:
         docfilename = os.path.join(self.configdir, DOC_INFO_FILENAME)
         self.refdoc = helpers.load_json(docfilename)
         self.get_meta()
-        self.logger.info(f"AFTER get_meta {self.domain_filter}")
+        self.logger.debug(f"AFTER get_meta {self.domain_filter}")
         self.config_logging()
 
     def save_configuration(self):
@@ -137,7 +137,7 @@ class Synchro:
                     self.ping_address = DEFAULT_PING_ADDRESS
 
                 del self.refdoc[META_TAG]
-                self.logger.info(self.refdoc.keys())
+                self.logger.debug(self.refdoc.keys())
 
             else:
                 # config not explicit, guess it
@@ -308,6 +308,7 @@ class Synchro:
                 del self.doc[k]
 
     def save(self, filename):
+        print(f"comment : {self.public_comment}")
         sdoc = copy.deepcopy(self.doc)
         sdoc[META_TAG] = dict(last_check=self.last_check, public_comment=self.public_comment,
                               domains=self.domain_filter, outputdir=self.outputdir,

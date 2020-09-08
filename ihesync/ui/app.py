@@ -71,6 +71,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.refresh_configuration()
         self.refresh_information_counts()
         self.refresh_domain_list()
+        self.refresh_public_comment()
 
         if self.context.local_file_count_ondisk != self.context.local_file_count:
             self.msgbox_out_of_sync()
@@ -223,6 +224,11 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             self.statusbar.showMessage(msg, duration)
 
     # -- UI callback
+
+    @pyqtSlot()
+    def on_checkComments_clicked(self):
+        self.context.sync.public_comment = self.checkComments.checkState() == QtCore.Qt.Checked
+        self.change_status(changed=True)
 
     @pyqtSlot()
     def on_aboutPushButton_clicked(self):
