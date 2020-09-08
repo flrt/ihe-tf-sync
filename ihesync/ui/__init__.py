@@ -12,7 +12,3 @@ QTextEdit { font-family:"Menlo";font-size:12pt; }
 QWidget   { font-family:'Lucida Grande';font-size:9pt; }
 QLineEdit { font-family:"Menlo";font-size:9pt; }
 QTextEdit { font-family:"Menlo";font-size:9pt; }"""}
-
-
-# font-family:'Segoe UI';font-size:9pt;
-# "DejaVu Sans Mono";font-size:9pt; }
