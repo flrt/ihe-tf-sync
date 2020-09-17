@@ -8,8 +8,8 @@ from cx_Freeze import setup, Executable
 APPNAME = 'ihesync'
 APPDESCR = 'Synchronize published documents on ihe.net website locally.'
 MAIN = 'ihesync/ui/app.py'
-APP_ICON = 'ihesync/ui/img/3_books.ico'
-APP_ICNS = 'ihesync/ui/img/3_books.icns'
+APP_ICON = f'{APPNAME}/ui/img/ihesync.ico'
+APP_ICNS = f'{APPNAME}/ui/img/ihesync.icns'
 
 
 __version__ = '2.0'
@@ -68,7 +68,10 @@ elif sys.platform == "linux":
         description=APPDESCR,
         packages=[APPNAME],
         options={"build_exe": buildOptions},
-        executables=[Executable(MAIN, base="Win32GUI", targetName=APPNAME, icon=APP_ICON)],
+        executables=[Executable(MAIN, base=None, targetName=APPNAME, icon=APP_ICON)],
+        entry_points={'console_scripts':[f'{APPNAME} - {APPNAME}.{APPNAME}:main']},
+        data_files=[('share/applications', [f'{APPNAME}.desktop'])],
+        classifiers=["License :: OSI Approved :: BSD License"],
         author=__author__,
     )
     # includefiles += [...] : ajouter les recopies specifiques à Linux

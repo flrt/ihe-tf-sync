@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=ihesync
+GenericName=Data Explorer
+X-GNOME-FullName=IHE Documents Synchronizer
+Comment=Synchronize IHE documents locally
+Keywords=ihe,healthcare
+Exec=/usr/share/ihesync/ihesync
+Icon=/usr/share/pixmaps/ihesync.ico
+Terminal=False
+Type=Application
+Version=1.0
