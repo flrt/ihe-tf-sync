@@ -11,23 +11,21 @@ MAIN = 'ihesync/ui/app.py'
 APP_ICON = f'{APPNAME}/ui/img/ihesync.ico'
 APP_ICNS = f'{APPNAME}/ui/img/ihesync.icns'
 
-
 __version__ = '2.0'
 __author__ = "Frederic Laurent"
 #############################################################################
 # preparation des options
- 
+
 # chemins de recherche des modules
 # ajouter d'autres chemins (absolus) si necessaire: sys.path + ["chemin1", "chemin2"]
 path = sys.path + ["ihesync", "ihesync/ui"]
- 
+
 # options d'inclusion/exclusion des modules
 includes = []  # nommer les modules non trouves par cx_freeze
 excludes = []
 packages = []  # nommer les packages utilises
 
 buildOptions = dict(packages=["multiprocessing"], excludes=["tkinter"])
-
 
 winOptions = {"upgrade-code": "44aad47f-38bd-4fcf-b70c-b0b4cf3f246b",
               "initial_target_dir": r'[ProgramFilesFolder]\%s' % APPNAME,
@@ -50,7 +48,7 @@ optimize = 0
 silent = True
 
 if sys.platform == "win32":
-   #options["include_msvcr"] = True
+    # options["include_msvcr"] = True
     buildOptions["include_msvcr"] = True
     setup(
         name=APPNAME,
@@ -69,7 +67,7 @@ elif sys.platform == "linux":
         packages=[APPNAME],
         options={"build_exe": buildOptions},
         executables=[Executable(MAIN, base=None, targetName=APPNAME, icon=APP_ICON)],
-        entry_points={'console_scripts':[f'{APPNAME} - {APPNAME}.{APPNAME}:main']},
+        entry_points={'console_scripts': [f'{APPNAME} - {APPNAME}.{APPNAME}:main']},
         data_files=[('share/applications', [f'{APPNAME}.desktop'])],
         classifiers=["License :: OSI Approved :: BSD License"],
         author=__author__,
