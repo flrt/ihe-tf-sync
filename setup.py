@@ -75,6 +75,18 @@ elif sys.platform == "linux":
         author=__author__,
     )
     # includefiles += [...] : ajouter les recopies specifiques à Linux
+elif sys.platform == "darwin":
+    setup(name=APPNAME,
+          version=__version__,
+          description=APPDESCR,
+          packages=[APPNAME],
+          options={"build_exe": buildOptions},
+          # "bdist_mac":macOptions, "bdist_dmg":dmgOptions},
+          executables=[Executable(MAIN, base=None, targetName=APPNAME, icon=APP_ICON)],
+          )
 else:
     pass
     # includefiles += [...] : cas du Mac OSX non traite ici
+
+# On Mac OS
+# python setup.py bdist_mac --iconfile=assets/banana.icns --custom-info-plist=Info.plist

@@ -3,8 +3,8 @@
     <file>img/3_books_128x128.png</file>
     <file>img/3_books_64x64.png</file>
     <file>img/3_books.svg</file>
-    <file>img/book_ihe_64.png</file>
     <file>img/info2.svg</file>
+    <file>img/files_darker.svg</file>
     <file>img/sync.svg</file>
     <file>img/info.svg</file>
     <file>img/delete.svg</file>
@@ -15,8 +15,5 @@
     <file>img/refresh.svg</file>
     <file>img/book_ihe.svg</file>
     <file>img/books.svg</file>
-  </qresource>
-  <qresource prefix="txt">
-    <file>about.html</file>
   </qresource>
 </RCC>

@@ -12,7 +12,6 @@ __license__ = "MIT"
 
 import os.path
 import json
-import sys
 from json.decoder import JSONDecodeError
 from datetime import datetime, date
 import io

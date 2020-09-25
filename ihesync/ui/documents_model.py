@@ -36,7 +36,7 @@ class DocumentsModel(QAbstractTableModel):
 
     def update_documents(self, val):
         (idx, action, docinfo, local_count) = val
-        self.logger.info(
+        self.logger.debug(
             f"update_documents > idx={idx} action={action} local_count= {local_count} docinfo={docinfo}"
         )
         for documents in self.docs:
@@ -75,8 +75,10 @@ class DocumentsModel(QAbstractTableModel):
             return Qt.AlignCenter
 
         if role == Qt.BackgroundRole:
-            if c == 1 and self.docs[r]["down"] > 0:
-                if self.docs[r]["down"] != self.docs[r]["local"]:
+            if c == 1 and self.docs[r]["down"] >= 0:
+                if self.docs[r]["checked"] and \
+                        ((self.docs[r]["down"] != self.docs[r]["local"]) or \
+                         (self.docs[r]["local"] != self.docs[r]["total"])):
                     return ERR_COUNT_BACKGROUND_COLOR
 
         if role == Qt.EditRole:
@@ -103,7 +105,7 @@ class DocumentsModel(QAbstractTableModel):
         if not index.isValid():
             return False
         if role == QtCore.Qt.CheckStateRole and index.column() == 0:
-            self.logger.info(
+            self.logger.debug(
                 f"setData {index.row()} = {self.docs[index.row()]['checked']} - value {value}"
             )
             self.docs[index.row()]["checked"] = value == QtCore.Qt.Checked

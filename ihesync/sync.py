@@ -40,7 +40,7 @@ META_TAG = "__meta__"
 
 
 class Synchro:
-    def __init__(self, outputdir, configdir, refdoc={}):
+    def __init__(self, outputdir, configdir, refdoc={}, console=False):
         """
         Constructor
 
@@ -48,7 +48,11 @@ class Synchro:
         :param dict refdoc: dictionnary containing reference
             configuration (previous)
         """
-        locale.setlocale(locale.LC_ALL, 'en_US.utf8')
+        if sys.platform == "win32":
+            locale.setlocale(locale.LC_ALL, 'en_US.utf8')
+        elif sys.platform == "darwin":
+            locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+
         self.logger = logging.getLogger()
         self.log_filename = str(DEFAULT_CONF_DIR / DEFAULT_LOG_FILENAME)
         self.log_level = DEFAULT_LOG_LEVEL
@@ -56,6 +60,7 @@ class Synchro:
         self.doc = {}
         self.outputdir = outputdir
         self.configdir = configdir
+        self.console = console
         self.last_check = None
         self.domain_filter = []
         self.public_comment = False
@@ -208,11 +213,19 @@ class Synchro:
         """
 
         if doc["domain"] in self.domain_filter:
-            print(".", end="", flush=True)
+            if self.console:
+                print(".", end="", flush=True)
+
             # get more info with a HEAD request
-            self.logger.info(f"get_document_characteristics {str(doc)}")
+            self.logger.debug(f"get_document_characteristics {str(doc)}")
             try:
                 headreq = requests.head(doc['href'])
+
+                if headreq.status_code == 301:
+                    # get the new location
+                    # Assume only one redirection happens...
+                    doc['href'] = headreq.headers['Location']
+                    headreq = requests.head(doc['href'])
 
                 if headreq.status_code == 200:
                     doc["last-modified"] = headreq.headers["Last-Modified"]
@@ -235,6 +248,7 @@ class Synchro:
         if self.public_comment:
             retcode &= self.load_ihe_page(IHE_COMMENT_URL)
         self.last_check = datetime.datetime.now()
+
         return retcode
 
     def load_ihe_page(self, webpage=IHE_TF_URL):
@@ -272,9 +286,12 @@ class Synchro:
         """
         Display how many documents are available in each domain.
         """
-        self.logger.info("\nAvailable documents :")
-        for key, value in self.doc.items():
-            self.logger.info(f"{key}: {len(value)} documents")
+        disp = ["Available documents :"]
+        [disp.append(f"{key}: {len(value)} documents") for key, value in self.doc.items()]
+
+        if self.console:
+            [print(s) for s in disp]
+        [self.logger.info(s) for s in disp]
 
     def classify(self, unsorted_docs):
         """
@@ -308,7 +325,6 @@ class Synchro:
                 del self.doc[k]
 
     def save(self, filename):
-        print(f"comment : {self.public_comment}")
         sdoc = copy.deepcopy(self.doc)
         sdoc[META_TAG] = dict(last_check=self.last_check, public_comment=self.public_comment,
                               domains=self.domain_filter, outputdir=self.outputdir,
@@ -404,16 +420,21 @@ class Synchro:
         - test if a new document has to be download : new document available or new version of the document
 
         """
-        self.logger.info("\nClean documents not in sync...")
+        disp = ["\nClean documents not in sync..."]
+
         for doc in to_del:
-            self.logger.info(f"Obsolete document {doc['filename']} found: delete it...")
+            disp.append(f"Obsolete document {doc['filename']} found: delete it...")
             if confirm:
                 self.delete(doc)
 
         for doc in to_download:
-            self.logger.info(f"Newer document {doc['filename']} found: download it...")
+            disp.append(f"Newer document {doc['filename']} found: download it...")
             if confirm:
                 self.download(doc)
+
+        [self.logger.info(s) for s in disp]
+        if self.console:
+            [print(s) for s in disp]
 
     def document_path(self, docinfo, createpath=False):
         """
@@ -494,6 +515,7 @@ class Synchro:
     def scan_local_dirs(self) -> int:
         """
         Scan local repository and set information about documents already downloaded
+        :return int: files count
 
         """
         # clean previous informations about local files
@@ -516,23 +538,30 @@ class Synchro:
 
                     if relative_path not in self.domain_filter:
                         self.domain_filter.append(relative_path)
+
                     # copy the etag metadata of the previous downloaded file
                     try:
                         if self.doc[relative_path][name]["size"] == self.refdoc[relative_path][name]["size"]:
                             self.doc[relative_path][name]["etag"] = self.refdoc[relative_path][name]["etag"]
                     except KeyError as kerr:
-                        self.logger.warning(f"Unkown local file {name} ({relative_path} : error {kerr}")
+                        self.logger.warning(f"Unkown local file {name} ({relative_path} : error {kerr})")
 
                     total += 1
 
-        self.logger.info(f"END scan_local_dirs {self.domain_filter}")
+        self.logger.info(f"END scan_local_dirs {self.domain_filter} - total found = {total}")
 
         return total
 
     def count_local_files(self, domain) -> int:
-
-        return len(list(filter(lambda x: 'size' in self.doc[domain][x] or 'last-modified' in self.doc[domain][x],
+        """
+            Return the files count that has been downloaded
+            A file is said dowlooded if the meta size/last-modified are set in the dictionary
+            :return int: count
+        """
+        count = len(list(filter(lambda x: 'size' in self.doc[domain][x] or 'last-modified' in self.doc[domain][x],
                                self.doc[domain])))
+        self.logger.debug(f"sync:count_local_files domain {domain} = {count}")
+        return count
 
 
 def main():
@@ -570,11 +599,7 @@ def main():
     if not os.path.exists(args.confdir):
         os.makedirs(args.confdir)
 
-    # Load previous configuration if presen
-    # docfilename = os.path.join(args.confdir, DOC_INFO_FILENAME)
-    # previous_docs = helpers.load_json(docfilename)
-
-    sy = Synchro(args.output, args.confdir, {})
+    sy = Synchro(args.output, args.confdir, {}, console=True)
     sy.load_configuration()
 
     # if documents in public comment have to be downloaded
@@ -596,7 +621,7 @@ def main():
 
     to_del, to_download = sy.prepare_sync()
     # sync with local directory
-    sy.sync_all(confirm=not args.nosync)
+    sy.sync_all(to_del, to_download, confirm=not args.nosync)
 
     # save new data
     sy.save_infos()

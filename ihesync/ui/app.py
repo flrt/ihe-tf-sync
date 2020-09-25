@@ -15,8 +15,9 @@ from ihesync.ui import dialogs
 from ihesync.ui import sync_worker
 from ihesync import DOMAIN_DICT
 from ihesync.ui import STYLES
+from ihesync.ui import ICONS
 
-__version__ = 1.0
+__version__ = 2.0
 
 
 class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
@@ -29,10 +30,12 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.setupUi(self)
         self.context = context
         self.changed = False
-        self.label_ihewebsite.setText('Visit IHE Website : <a href="www.ihe.net">tech</a>')
+        self.label_ihewebsite.setText('Visit IHE Website : <a href="http://www.ihe.net">www.ihe.net</a>')
+        self.label_ihewebsite.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        self.label_ihewebsite.setOpenExternalLinks(True)
 
         self.modifed_label = QLabel("Status: No change")
-        self.modifed_label.setStyleSheet('border: 0; color:  blue;')
+        #self.modifed_label.setStyleSheet('border: 0; color:  blue;')
         self.network_label = QLabel("No network!")
 
         self.statusBar().setStyleSheet('border: 0; background-color: #FFF8DC;')
@@ -42,7 +45,6 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.statusBar().addPermanentWidget(VLine())
         self.statusBar().addPermanentWidget(self.modifed_label)
 
-        self.label_ihewebsite.setOpenExternalLinks(True)
         self.threadpool = QThreadPool()
         self.threadpool.setMaxThreadCount(4)
 
@@ -58,6 +60,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
         if platform.system() in STYLES:
             self.setStyleSheet(STYLES[platform.system()])
+
 
     def main(self):
         conf_loaded = self.context.load_configuration()
@@ -156,8 +159,8 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
         data = []
         for domain in sorted(self.context.domains, key=lambda v: v["name"]):
-            self.logger.debug(f"> domain >> {domain}")
             local_count = self.context.sync.count_local_files(domain["name"])
+            self.logger.debug(f"> domain >> {domain} - local cout = {local_count}")
 
             data.append(
                 {
@@ -166,7 +169,8 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
                     "title": DOMAIN_DICT[domain["name"]]
                     if domain["name"] in DOMAIN_DICT
                     else "",
-                    "down": domain["downloaded"],
+                    "down": local_count,
+                    #domain["downloaded"],
                     "total": domain["files"],
                     "link": local_count > 0,
                     "local": local_count,
@@ -200,7 +204,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             Refresh counters and date last checked
         :return:
         """
-        self.logger.debug("refresh_counts")
+        self.logger.debug("refresh_information_counts")
         self.newDocsGroupBox.setVisible(False)
         self.refresh_last_checked()
         self.context.scan_local_dirs()
@@ -275,19 +279,21 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
     @pyqtSlot()
     def on_confSelectButton_clicked(self):
-        self.context.conf_directory = str(
-            QFileDialog.getExistingDirectory(self, "Select Directory")
-        )
-        self.textConfDir.setText(self.context.conf_directory)
-        self.change_status(changed=True)
+        previous = self.textConfDir.toPlainText()
+        confdir = QFileDialog.getExistingDirectory(self, "Select Directory", previous, QFileDialog.ShowDirsOnly)
+        if len(confdir):
+            self.context.conf_directory = str(confdir)
+            self.textConfDir.setText(self.context.conf_directory)
+            self.change_status(changed=True)
 
     @pyqtSlot()
     def on_docSelectButton_clicked(self):
-        self.context.doc_directory = str(
-            QFileDialog.getExistingDirectory(self, "Select Directory")
-        )
-        self.textDocDir.setText(self.context.doc_directory)
-        self.change_status(changed=True)
+        previous = self.textDocDir.toPlainText()
+        docdir = QFileDialog.getExistingDirectory(self, "Select Directory", previous, QFileDialog.ShowDirsOnly)
+        if len(docdir):
+            self.context.doc_directory = str(docdir)
+            self.textDocDir.setText(self.context.doc_directory)
+            self.change_status(changed=True)
 
     @pyqtSlot()
     def on_syncButton_clicked(self):
@@ -425,13 +431,13 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         docinfo = index.model().docs[index.row()]
         if docinfo['link'] and index.column() == 4:
             dom = self.context.local_path_domain(docinfo['domain'])
-            webbrowser.open_new(dom)
+            webbrowser.open_new(f"file://{dom}")
 
 
 class OpenFolderDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, parent=None):
         super(OpenFolderDelegate, self).__init__(parent)
-        self.icon = QtGui.QIcon(":/img/files.svg")
+        self.icon = QtGui.QIcon(ICONS['files'])
 
     def paint(self, painter: QtGui.QPainter, option: 'QStyleOptionViewItem', index: QtCore.QModelIndex) -> None:
         if index.model().docs[index.row()]['link']:

@@ -3,6 +3,7 @@ import logging
 
 from ihesync import sync
 
+
 class Context:
     """
     Context for the synchronization process
@@ -12,6 +13,7 @@ class Context:
     - current : new domains to synchronise
 
     """
+
     def __init__(self):
         self.logger = logging.getLogger()
         self.doc_directory = sync.DEFAULT_DOC_DIR
@@ -147,11 +149,11 @@ class Context:
         :return: change count
         """
         self.logger.debug("check_updates_available")
-        change_count=0
+        change_count = 0
         for domain in self.initial_domains:
             self.logger.info(f"domain={domain} = {len(self.sync.doc[domain])} / {len(self.sync.refdoc[domain])}")
             diff = abs(len(self.sync.doc[domain]) - len(self.sync.refdoc[domain]))
-            if diff>0:
+            if diff > 0:
                 change_count += diff
         return change_count
 

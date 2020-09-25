@@ -37,7 +37,7 @@ class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
                     or len(set(self.new_domains) - set(self.old_domains)) > 0
             ):
                 txt = (
-                    f'<p>Previous domains: <code style="color:blue">{oldd}</code>'
+                    f'<p>Previous domains: <code style="color:purple">{oldd}</code>'
                     f'<br/>New domains: <code style="color:green">{newd}</code></p>'
                 )
             else:
@@ -65,7 +65,7 @@ class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
             )
 
         if len(self.old_docs) > 0:
-            txt += f"<h1>Delete documents {len(self.old_docs)}:</h1>"
+            txt += f"<h1>Delete documents ({len(self.old_docs)}):</h1>"
             txt += "<ul><li>{}</li></ul>".format(
                 "</li><li>".join(list(map(lambda x: x["filename"], self.old_docs)))
             )
@@ -77,7 +77,7 @@ class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
 
 class ProgressSyncDialog(QtWidgets.QDialog):
     # confirm_signal = QtCore.pyqtSignal(object)
-    REMOTE_INFO_TEXT = "Get remote informations about document "
+    REMOTE_INFO_TEXT = "Get remote information about document "
     SYNC_INFO_TEXT = "Synchronize ! "
 
     def __init__(self, text, parent=None):

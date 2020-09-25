@@ -8,4 +8,4 @@ Exec=/usr/share/ihesync/ihesync
 Icon=/usr/share/pixmaps/ihesync.ico
 Terminal=False
 Type=Application
-Version=1.0
+Version=2.0
