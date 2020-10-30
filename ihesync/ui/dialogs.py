@@ -71,12 +71,10 @@ class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
             )
 
         self.textDocumentsBrowser.setText(txt)
-
         self.show()
 
 
 class ProgressSyncDialog(QtWidgets.QDialog):
-    # confirm_signal = QtCore.pyqtSignal(object)
     REMOTE_INFO_TEXT = "Get remote information about document "
     SYNC_INFO_TEXT = "Synchronize ! "
 
