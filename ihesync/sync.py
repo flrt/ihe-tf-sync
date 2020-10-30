@@ -66,6 +66,7 @@ class Synchro:
         self.public_comment = False
         self.ping_address = DEFAULT_PING_ADDRESS
         self.ping_delay = DEFAULT_PING_DELAY
+        self.geometry = (0, 0)
 
     def config_logging(self):
         logging.basicConfig(filename=str(DEFAULT_CONF_DIR / self.log_filename),
@@ -152,6 +153,8 @@ class Synchro:
                 else:
                     self.ping_delay = DEFAULT_PING_DELAY
                     self.ping_address = DEFAULT_PING_ADDRESS
+                if "geometry" in self.refdoc[META_TAG]:
+                    self.geometry = self.refdoc[META_TAG]["geometry"]
 
                 del self.refdoc[META_TAG]
                 self.logger.debug(self.refdoc.keys())
@@ -341,7 +344,8 @@ class Synchro:
         sdoc[META_TAG] = dict(last_check=self.last_check, public_comment=self.public_comment,
                               domains=self.domain_filter, outputdir=self.outputdir,
                               logfile=self.log_filename, loglevel=self.log_level,
-                              ping=dict(address=self.ping_address, delay=self.ping_delay))
+                              ping=dict(address=self.ping_address, delay=self.ping_delay),
+                              geometry=self.geometry)
 
         helpers.save_json(filename, sdoc)
 

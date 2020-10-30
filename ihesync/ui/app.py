@@ -35,7 +35,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.label_ihewebsite.setOpenExternalLinks(True)
 
         self.modifed_label = QLabel("Status: No change")
-        #self.modifed_label.setStyleSheet('border: 0; color:  blue;')
+        # self.modifed_label.setStyleSheet('border: 0; color:  blue;')
         self.network_label = QLabel("No network!")
 
         self.statusBar().setStyleSheet('border: 0; background-color: #FFF8DC;')
@@ -61,9 +61,11 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         if platform.system() in STYLES:
             self.setStyleSheet(STYLES[platform.system()])
 
-
     def main(self):
         conf_loaded = self.context.load_configuration()
+        if self.context.sync.geometry != (0, 0):
+            (w, h) = self.context.sync.geometry
+            self.centralwidget.parentWidget().resize(w, h)
 
         self.show()
         self.start_network_watchdog()
@@ -256,7 +258,6 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         if self.context.sync.log_level != "DEBUG":
             self.change_status(changed=True)
 
-
     @pyqtSlot()
     def on_changeLogPushButton_clicked(self):
         self.context.sync.update_logger_config(filename=self.textLoggingFilename.toPlainText())
@@ -356,6 +357,11 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             self.logger.info("No changes")
         event.accept()
         self.stop_network_watchdog()
+
+    def resizeEvent(self, event):
+        h = self.centralwidget.parentWidget().size().height()
+        w = self.centralwidget.parentWidget().size().width()
+        self.context.sync.geometry = (w, h)
 
     # -- > Actions --
     # --------------
