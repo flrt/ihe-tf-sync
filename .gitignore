@@ -11,3 +11,4 @@ bin/
 Scripts/
 build/
 include/
+pyvenv.cfg
