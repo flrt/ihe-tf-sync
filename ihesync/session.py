@@ -44,11 +44,15 @@ class Context:
 
         self.sync = sync.Synchro(self.doc_directory, self.conf_directory, conf)
         self.sync.load_configuration()
-        self.initial_domains = self.sync.domain_filter[:]
-        self.selected_domains = self.sync.domain_filter[:]
+
+        #self.initial_domains = self.sync.domain_filter[:]
+        #self.selected_domains = self.sync.domain_filter[:]
         self.logger.info(f"Initial domains : {self.initial_domains}")
         retcode &= self.sync.doc_cartography()
 
+        self.scan_local_dirs()
+        self.initial_domains = self.sync.domain_filter[:]
+        self.selected_domains = self.sync.domain_filter[:]
         # if no previous context exists, copy the current one
         if len(self.sync.refdoc.keys()) < 2:
             self.sync.duplicate_docs(source_ref=False)
@@ -57,7 +61,9 @@ class Context:
         if len(self.sync.doc.keys()) < 2:
             self.sync.duplicate_docs(source_ref=True)
 
-        self.scan_local_dirs()
+
+        #self.initial_domains = self.sync.domain_filter[:]
+        #self.selected_domains = self.sync.domain_filter[:]
         self.refresh_counts_ref()
 
         # build domain list. From reference map (saved) + remote map
@@ -124,8 +130,10 @@ class Context:
         dom = []
         for k in sorted(conf.keys()):
             downloaded = len(list(filter(lambda x: "size" in x, conf[k].values())))
+            ref_files = len(list(filter(lambda x: "href" in x and "title" in x, conf[k].values())))
+
             dom.append(dict(name=k, checked=downloaded > 0,
-                            files=len(conf[k]), downloaded=downloaded))
+                            files=ref_files, downloaded=downloaded))
         return dom
 
     def prepare_sync(self, domains=[]):

@@ -170,7 +170,6 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
                     if domain["name"] in DOMAIN_DICT
                     else "",
                     "down": local_count,
-                    #domain["downloaded"],
                     "total": domain["files"],
                     "link": local_count > 0,
                     "local": local_count,
@@ -242,18 +241,26 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     @pyqtSlot()
     def on_infoRadioButton_clicked(self):
         self.context.sync.update_logger_config(level="INFO")
+        if self.context.sync.log_level != "INFO":
+            self.change_status(changed=True)
 
     @pyqtSlot()
     def on_errorRadioButton_clicked(self):
         self.context.sync.update_logger_config(level="ERROR")
+        if self.context.sync.log_level != "ERROR":
+            self.change_status(changed=True)
 
     @pyqtSlot()
     def on_debugRadioButton_clicked(self):
         self.context.sync.update_logger_config(level="DEBUG")
+        if self.context.sync.log_level != "DEBUG":
+            self.change_status(changed=True)
+
 
     @pyqtSlot()
     def on_changeLogPushButton_clicked(self):
         self.context.sync.update_logger_config(filename=self.textLoggingFilename.toPlainText())
+        self.change_status(changed=True)
 
     @pyqtSlot()
     def on_deleteLogPushButton_clicked(self):
@@ -272,10 +279,12 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     @pyqtSlot()
     def on_textConfDir_textChanged(self):
         self.context.conf_directory = self.textConfDir.toPlainText()
+        self.change_status(changed=True)
 
     @pyqtSlot()
     def on_textDocDir_textChanged(self):
         self.context.doc_directory = self.textDocDir.toPlainText()
+        self.change_status(changed=True)
 
     @pyqtSlot()
     def on_confSelectButton_clicked(self):

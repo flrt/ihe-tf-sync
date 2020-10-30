@@ -84,17 +84,21 @@ class Synchro:
             self.config_logging()
 
     def load_configuration(self):
-        # Load previous configuration if present
-        docfilename = os.path.join(self.configdir, DOC_INFO_FILENAME)
-        self.refdoc = helpers.load_json(docfilename)
+        """
+            Load previous configuration if present
+        :return: -
+        """
+
+        filename = os.path.join(self.configdir, DOC_INFO_FILENAME)
+        self.refdoc = helpers.load_json(filename)
         self.get_meta()
         self.logger.debug(f"AFTER get_meta {self.domain_filter}")
         self.config_logging()
 
     def save_configuration(self):
-        docfilename = os.path.join(self.configdir, DOC_INFO_FILENAME)
-        self.logger.info(docfilename)
-        self.save(docfilename)
+        filename = os.path.join(self.configdir, DOC_INFO_FILENAME)
+        self.logger.info(filename)
+        self.save(filename)
 
     def duplicate_docs(self, source_ref=True):
         if source_ref:
@@ -103,6 +107,10 @@ class Synchro:
             self.refdoc = copy.deepcopy(self.doc)
 
     def get_all_domains(self):
+        """
+            Get IHE domains
+        :return: list of domains
+        """
         if self.doc:
             return list(self.doc.keys())
         elif self.refdoc:
@@ -113,6 +121,10 @@ class Synchro:
                     'PHARMACY', 'QRPH', 'QUALITY', 'RO', 'RAD']
 
     def get_meta(self):
+        """
+            Extract metadata from configuration
+        :return: -
+        """
         if self.refdoc:
             if META_TAG in self.refdoc:
                 self.last_check = datetime.datetime.strptime(self.refdoc[META_TAG]["last_check"],
@@ -199,7 +211,7 @@ class Synchro:
         result_docs = []
         for domain, docs in self.doc.items():
             for doc in docs.values():
-                if doc["domain"] in self.domain_filter:
+                if "title" in doc and doc["domain"] in self.domain_filter:
                     result_docs.append(doc)
         return result_docs
 
@@ -395,7 +407,11 @@ class Synchro:
         # looking for obsolete documents
         for domain, docs in self.refdoc.items():
             for keydoc, docinfo in self.refdoc[domain].items():
-                if docinfo['domain'] not in self.domain_filter:
+                if 'title' not in docinfo:
+                    # local file, no more available on ihe website
+                    self.logger.info(f"Obsolete {keydoc} : mark to delete.")
+                    to_del.append(docinfo)
+                elif docinfo['domain'] not in self.domain_filter:
                     if os.path.exists(self.document_path(docinfo)):
                         self.logger.info("document present localy : delete")
                         to_del.append(docinfo)
@@ -406,9 +422,8 @@ class Synchro:
                 self.logger.info(f"prepare_sync : domain {domain}")
                 # domain to sync
                 for keydoc, docinfo in self.doc[domain].items():
-                    if self.is_different(domain, keydoc) or not self.check_local(
-                            docinfo
-                    ):
+                    if 'title' in docinfo and (self.is_different(domain, keydoc) \
+                                               or not self.check_local(docinfo)):
                         to_download.append(docinfo)
         return to_del, to_download
 
@@ -515,6 +530,7 @@ class Synchro:
     def scan_local_dirs(self) -> int:
         """
         Scan local repository and set information about documents already downloaded
+        Update selected domain if necessary (a local file already present : domain selected)
         :return int: files count
 
         """
@@ -533,8 +549,14 @@ class Synchro:
                 if len(relative_path):
                     r = os.stat(os.path.join(root, name))
                     self.logger.info(f'scan_local_dir : {name} [{r.st_size}] - relative_path {relative_path}')
+                    if name not in self.doc[relative_path]:
+                        self.doc[relative_path][name] = {"domain": relative_path,
+                                                         "filename": name,
+                                                         "size": r.st_size,
+                                                         "last-modified": r.st_mtime}
+
                     self.doc[relative_path][name]["size"] = r.st_size
-                    self.doc[relative_path][name]["last-modified"] = r.st_size
+                    self.doc[relative_path][name]["last-modified"] = r.st_mtime
 
                     if relative_path not in self.domain_filter:
                         self.domain_filter.append(relative_path)
@@ -559,7 +581,7 @@ class Synchro:
             :return int: count
         """
         count = len(list(filter(lambda x: 'size' in self.doc[domain][x] or 'last-modified' in self.doc[domain][x],
-                               self.doc[domain])))
+                                self.doc[domain])))
         self.logger.debug(f"sync:count_local_files domain {domain} = {count}")
         return count
 

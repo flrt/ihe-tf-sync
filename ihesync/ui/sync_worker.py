@@ -2,6 +2,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot
 import logging
 import socket
 import time
+import datetime
 
 WORKER_ACTION_DOWN = 'Download'
 WORKER_ACTION_DEL = 'Delete'
@@ -20,6 +21,7 @@ class BasicWorker(QRunnable):
         self.signals = BasicSignals()
         self.context = context
         self.aborted = False
+        self.logger = logging.getLogger()
 
     def abort(self):
         self.aborted = True
@@ -38,18 +40,26 @@ class PrepareWorker(BasicWorker):
         doclist = self.context.sync.get_document_tocheck_list()
 
         idx = 0
+        d0 = datetime.datetime.now()
+        deltadoc = (d0-d0)
         while (idx < len(doclist)) and self.aborted is False:
+            d1 = datetime.datetime.now()
             self.context.sync.get_document_characteristics(doclist[idx])
+            d2 = datetime.datetime.now()
+            deltadoc = deltadoc + (d2-d1)
+            self.logger.debug(f"doc {idx} : {str(d2-d1)} / {str(d2-d0)}")
             self.signals.progress.emit((idx + 1, "", doclist[idx], 0))
             idx += 1
+
         if self.aborted is False:
+            d4 = datetime.datetime.now()
+            self.logger.debug(f"total global time : {str(d4-d0)} / total doc {str(deltadoc)}")
             self.signals.finished.emit()
 
 
 class SyncWorker(BasicWorker):
     def __init__(self, context):
         super().__init__(context)
-        self.logger = logging.getLogger()
 
     def doc_count(self):
         return len(self.context.infos["to_del"]) + len(self.context.infos["to_download"])
@@ -92,7 +102,6 @@ class SyncWorker(BasicWorker):
 class NetworkWorker(BasicWorker):
     def __init__(self, ip, port, delay):
         super().__init__(None)
-        self.logger = logging.getLogger()
         self.ip = ip
         self.port = port
         self.delay = delay
@@ -107,10 +116,8 @@ class NetworkWorker(BasicWorker):
 
     def is_connected(self):
         try:
-            # connect to the host -- tells us if the host is actually
-            # reachable
+            # connect to the host -- tells us if the host is actually reachable
             socket.create_connection((self.ip, self.port))
             return True
         except OSError:
-            pass
-        return False
+            return False
