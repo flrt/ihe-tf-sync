@@ -6,6 +6,12 @@ icon_fill = "black"
 if darkdetect.isDark():
     ICONS["files"] = ":/img/files_darker.svg"
 
+MAIN_WINDOW_DEFAULT_SIZE = {
+    "Windows": (800, 750),
+    "Darwin": (815, 750),
+    "Linux": (760, 720)
+}
+
 STYLES = {"Windows": """
 QWidget   { font-family:'Segoe UI';font-size:9pt; }
 QLineEdit { font-family:font-family:'Segoe UI';font-size:9pt; }

@@ -14,8 +14,8 @@ from ihesync.ui import documents_model
 from ihesync.ui import dialogs
 from ihesync.ui import sync_worker
 from ihesync import DOMAIN_DICT
-from ihesync.ui import STYLES
-from ihesync.ui import ICONS
+from ihesync.ui import STYLES, ICONS, MAIN_WINDOW_DEFAULT_SIZE
+
 
 __version__ = 2.0
 
@@ -63,9 +63,15 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
 
     def main(self):
         conf_loaded = self.context.load_configuration()
+
+        # default size
+        (w, h) = (800, 700)
+        if platform.system() in MAIN_WINDOW_DEFAULT_SIZE:
+            (w, h) = MAIN_WINDOW_DEFAULT_SIZE[platform.system()]
+        # overwritten size = user prefs
         if self.context.sync.geometry != (0, 0):
             (w, h) = self.context.sync.geometry
-            self.centralwidget.parentWidget().resize(w, h)
+        self.centralwidget.parentWidget().resize(w, h)
 
         self.show()
         self.start_network_watchdog()

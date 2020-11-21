@@ -37,7 +37,7 @@ class SyncDialog(QtWidgets.QDialog, sync_dialog.Ui_SyncDialog):
                     or len(set(self.new_domains) - set(self.old_domains)) > 0
             ):
                 txt = (
-                    f'<p>Previous domains: <code style="color:purple">{oldd}</code>'
+                    f'<p>Previous domains: <code style="color:gray">{oldd}</code>'
                     f'<br/>New domains: <code style="color:green">{newd}</code></p>'
                 )
             else:
