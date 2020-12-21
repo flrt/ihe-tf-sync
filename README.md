@@ -18,9 +18,17 @@ Simply launch the executable, select domains you want to synchronize and let it 
 
 The main window looks like :
 
-- on linux : ![Linux app](/doc/main_linux.png)
-- on mac OS : ![MacOS app](/doc/main_macos.png)
-- on windows : ![Windows app](/doc/main_windows.png)
+### on linux
+
+![Linux app](/doc/main_linux.png)
+
+### on mac OS
+
+![MacOS app](/doc/main_macos.png)
+
+### on windows
+
+![Windows app](/doc/main_windows.png)
 
 
 
