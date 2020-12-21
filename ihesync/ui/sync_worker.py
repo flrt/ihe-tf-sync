@@ -40,20 +40,12 @@ class PrepareWorker(BasicWorker):
         doclist = self.context.sync.get_document_tocheck_list()
 
         idx = 0
-        d0 = datetime.datetime.now()
-        deltadoc = (d0-d0)
         while (idx < len(doclist)) and self.aborted is False:
-            d1 = datetime.datetime.now()
             self.context.sync.get_document_characteristics(doclist[idx])
-            d2 = datetime.datetime.now()
-            deltadoc = deltadoc + (d2-d1)
-            self.logger.debug(f"doc {idx} : {str(d2-d1)} / {str(d2-d0)}")
             self.signals.progress.emit((idx + 1, "", doclist[idx], 0))
             idx += 1
 
         if self.aborted is False:
-            d4 = datetime.datetime.now()
-            self.logger.debug(f"total global time : {str(d4-d0)} / total doc {str(deltadoc)}")
             self.signals.finished.emit()
 
 

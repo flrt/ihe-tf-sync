@@ -35,7 +35,6 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.label_ihewebsite.setOpenExternalLinks(True)
 
         self.modifed_label = QLabel("Status: No change")
-        # self.modifed_label.setStyleSheet('border: 0; color:  blue;')
         self.network_label = QLabel("No network!")
 
         self.statusBar().setStyleSheet('border: 0; background-color: #FFF8DC;')
