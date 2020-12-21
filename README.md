@@ -16,6 +16,13 @@ You can use either the GUI app or the [command line](commandline.md)
 The application is avalaible for windows, linux and macos.
 Simply launch the executable, select domains you want to synchronize and let it downnload files.
 
+The main window looks like :
+
+![Linux app](doc/main_linux.png =200x300)
+![MacOS app](doc/main_macos.png =200x300)
+![Windows app](doc/main_windows.png =200x300)
+
+
 
 
 # Command Line overview 
