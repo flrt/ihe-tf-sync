@@ -30,7 +30,7 @@ The main window looks like :
 
 ![Windows app](/doc/main_windows.png)
 
-
+A detailed page presents the different parts of the application : [cf user documentation](user_doc.md).
 
 
 # Command Line overview 
