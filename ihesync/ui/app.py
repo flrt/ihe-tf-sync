@@ -473,9 +473,12 @@ class VLine(QFrame):
         self.setFrameShape(self.VLine | self.Sunken)
 
 
-if __name__ == "__main__":
+def main():
     app = QtWidgets.QApplication(sys.argv)
     ctx = session.Context()
     iheui = Ui(ctx)
     iheui.main()
     app.exec_()
+
+if __name__ == "__main__":
+    main()

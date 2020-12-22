@@ -67,7 +67,7 @@ elif sys.platform == "linux":
         packages=[APPNAME],
         options={"build_exe": buildOptions},
         executables=[Executable(MAIN, base=None, targetName=APPNAME, icon=APP_ICON)],
-        entry_points={'console_scripts': [f'{APPNAME} - {APPNAME}.{APPNAME}:main']},
+        entry_points={'console_scripts': ['ihesync=ihesync.ui.app:main']},
         data_files=[('share/applications', [f'{APPNAME}.desktop'])],
         classifiers=["License :: OSI Approved :: BSD License"],
         author=__author__,
