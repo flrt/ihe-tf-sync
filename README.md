@@ -40,7 +40,12 @@ A detailed page presents the different parts of the application : [cf user docum
 
 ### on windows
 
-Download the msi file in the distribution page.
+Download the msi file in the [release page](/releases). Then extract to the destination folder (for instance c:/soft).
+As the result, you should have
+
+![Windows exe](/doc/win_installation-ihesync.png).
+
+Launch the exe file, and that's it.
 
 # Command Line overview 
 
