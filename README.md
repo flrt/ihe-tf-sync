@@ -32,6 +32,15 @@ The main window looks like :
 
 A detailed page presents the different parts of the application : [cf user documentation](user_doc.md).
 
+# GUI installation
+
+### on linux
+
+### on macos
+
+### on windows
+
+Download the msi file in the distribution page.
 
 # Command Line overview 
 
