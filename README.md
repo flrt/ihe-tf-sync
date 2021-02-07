@@ -37,6 +37,7 @@ A detailed page presents the different parts of the application : [cf user docum
 ### on linux
 
 ### on macos
+Download the dmg file. Simply copy the app in your application folder and launch it.
 
 ### on windows
 
