@@ -78,8 +78,7 @@ elif sys.platform == "darwin":
           version=__version__,
           description=APPDESCR,
           packages=[APPNAME],
-          options={"build_exe": buildOptions},
-          # "bdist_mac":macOptions, "bdist_dmg":dmgOptions},
+          options={"build_exe": buildOptions, "bdist_mac": macOptions, "bdist_dmg": dmgOptions},
           executables=[Executable(MAIN, base=None, targetName=APPNAME, icon=APP_ICON)],
           )
 else:
