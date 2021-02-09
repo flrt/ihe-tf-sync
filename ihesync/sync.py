@@ -550,7 +550,7 @@ class Synchro:
         for root, dirs, files in os.walk(self.outputdir):
             relative_path = root[len(str(self.outputdir)) + 1:]
             for name in files:
-                if len(relative_path):
+                if len(relative_path) and relative_path in self.doc:
                     r = os.stat(os.path.join(root, name))
                     self.logger.info(f'scan_local_dir : {name} [{r.st_size}] - relative_path {relative_path}')
                     if name not in self.doc[relative_path]:
