@@ -41,7 +41,7 @@ Download the dmg file. Simply copy the app in your application folder and launch
 
 ### on windows
 
-Download the msi file in the [release page](/releases). Then extract to the destination folder (for instance c:/soft).
+Download the msi file in the [release page](releases). Then extract to the destination folder (for instance c:/soft).
 As the result, you should have
 
 ![Windows exe](/doc/win_installation-ihesync.png).
