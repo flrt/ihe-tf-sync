@@ -16,8 +16,7 @@ from ihesync.ui import sync_worker
 from ihesync import DOMAIN_DICT
 from ihesync.ui import STYLES, ICONS, MAIN_WINDOW_DEFAULT_SIZE
 
-
-__version__ = 2.0
+__version__ = 2.1
 
 
 class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
@@ -56,6 +55,8 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.tableView.setItemDelegateForColumn(4, icon_delegate)
         self.tableView.clicked.connect(self.open_documents_folder)
         self.logger.info("Starts with %d threads" % self.threadpool.maxThreadCount())
+
+        self.tabWidget.currentChanged.connect(self.current_tab_changed)
 
         if platform.system() in STYLES:
             self.setStyleSheet(STYLES[platform.system()])
@@ -352,6 +353,11 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     def on_synchronize_rejected(self):
         self.context.revert_sync()
 
+    def current_tab_changed(self, tab_number):
+        if tab_number == 0:
+            self.refresh_information_counts()
+            self.refresh_domain_list()
+
     def closeEvent(self, event):
         # save new data
         self.logger.debug(f"Close - change ? {self.changed}")
@@ -479,6 +485,7 @@ def main():
     iheui = Ui(ctx)
     iheui.main()
     app.exec_()
+
 
 if __name__ == "__main__":
     main()

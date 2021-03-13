@@ -11,7 +11,7 @@ MAIN = 'ihesync/ui/app.py'
 APP_ICON = f'{APPNAME}/ui/img/ihesync.ico'
 APP_ICNS = f'{APPNAME}/ui/img/ihesync.icns'
 
-__version__ = '2.0'
+__version__ = '2.1'
 __author__ = "Frederic Laurent"
 #############################################################################
 # preparation des options

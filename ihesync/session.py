@@ -16,10 +16,7 @@ class Context:
 
     def __init__(self):
         self.logger = logging.getLogger()
-        self.doc_directory = sync.DEFAULT_DOC_DIR
-        self.conf_directory = sync.DEFAULT_CONF_DIR
-        self.conf_file = sync.DOC_INFO_FILENAME
-        self.sync = None
+        self.sync = sync.Synchro(sync.DEFAULT_DOC_DIR, sync.DEFAULT_CONF_DIR, {})
         self.domains = []
         self.initial_domains = []
         self.selected_domains = []
@@ -29,6 +26,24 @@ class Context:
         self.no_config_file = True
         self.infos = {}
 
+
+    @property
+    def doc_directory(self):
+        return self.sync.outputdir
+
+    @doc_directory.setter
+    def doc_directory(self, docdir):
+        self.sync.outputdir = docdir
+        #self.scan_local_dirs()
+
+    @property
+    def conf_directory(self):
+        return self.sync.configdir
+
+    @conf_directory.setter
+    def conf_directory(self, value):
+        self.sync.configdir = value
+
     def load_configuration(self):
         """
             Load configuration form local config file.
@@ -37,16 +52,11 @@ class Context:
             Get some count informations
         """
         retcode = True
-
-        conf = {}
         if not (os.path.exists(self.conf_directory)):
             os.mkdir(self.conf_directory)
 
-        self.sync = sync.Synchro(self.doc_directory, self.conf_directory, conf)
         self.sync.load_configuration()
 
-        #self.initial_domains = self.sync.domain_filter[:]
-        #self.selected_domains = self.sync.domain_filter[:]
         self.logger.info(f"Initial domains : {self.initial_domains}")
         retcode &= self.sync.doc_cartography()
 
@@ -61,9 +71,6 @@ class Context:
         if len(self.sync.doc.keys()) < 2:
             self.sync.duplicate_docs(source_ref=True)
 
-
-        #self.initial_domains = self.sync.domain_filter[:]
-        #self.selected_domains = self.sync.domain_filter[:]
         self.refresh_counts_ref()
 
         # build domain list. From reference map (saved) + remote map

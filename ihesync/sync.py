@@ -538,13 +538,14 @@ class Synchro:
         :return int: files count
 
         """
+
         # clean previous informations about local files
         for domain in list(filter(lambda k: k != "__meta__", self.doc.keys())):
             for doc in self.doc[domain]:
-                if 'size' in doc:
-                    del doc['size']
-                if 'last-modified' in doc:
-                    del doc['last-modified']
+                if 'size' in self.doc[domain][doc].keys():
+                    del self.doc[domain][doc]['size']
+                if 'last-modified' in self.doc[domain][doc].keys():
+                    del self.doc[domain][doc]['last-modified']
 
         total = 0
         for root, dirs, files in os.walk(self.outputdir):
@@ -575,7 +576,6 @@ class Synchro:
                     total += 1
 
         self.logger.info(f"END scan_local_dirs {self.domain_filter} - total found = {total}")
-
         return total
 
     def count_local_files(self, domain) -> int:
