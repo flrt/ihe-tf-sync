@@ -1,6 +1,6 @@
 #!/bin/bash
 APP=ihesync
-VERSION=2.0
+VERSION=2.1
 DESTDIR=build/exe.linux-x86_64-3.8
 APPDIR=build/$APP
 
