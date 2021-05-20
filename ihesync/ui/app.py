@@ -205,6 +205,10 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.textPingIPaddress.setText(ip)
         self.textPingPort.setText(str(port))
         self.textPingDelay.setText(str(self.context.sync.ping_delay))
+        if self.context.sync.proxy:
+            print(self.context.sync.proxy)
+        else:
+            self.set_proxy_state(None)
 
     def refresh_information_counts(self) -> None:
         """
@@ -263,6 +267,23 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.context.sync.update_logger_config(level="DEBUG")
         if self.context.sync.log_level != "DEBUG":
             self.change_status(changed=True)
+
+    @pyqtSlot()
+    def on_noProxyRadioButton_clicked(self):
+        self.change_status(changed=True)
+        self.set_proxy_state(None)
+
+    @pyqtSlot()
+    def on_systemProxyRadioButton_clicked(self):
+        self.change_status(changed=True)
+        proxy=dict(address=str(self.textProxyAddress.toPlainText()), port=str(self.textProxyPort.toPlainText()))
+        self.set_proxy_state(proxy)
+
+    @pyqtSlot()
+    def on_specificProxyRadioButton_clicked(self):
+        self.change_status(changed=True)
+        proxy=dict(address=str(self.textProxyAddress.toPlainText()), port=str(self.textProxyPort.toPlainText()))
+        self.set_proxy_state(proxy)
 
     @pyqtSlot()
     def on_changeLogPushButton_clicked(self):
@@ -459,6 +480,16 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             dom = self.context.local_path_domain(docinfo['domain'])
             webbrowser.open_new(f"file://{dom}")
 
+    def set_proxy_state(self, proxy):
+        if proxy is None:
+            self.noProxyRadioButton.setChecked(True)
+            self.textProxyAddress.setDisabled(True)
+            self.textProxyPort.setDisabled(True)
+        else:
+            self.specificProxyRadioButton.setChecked(True)
+            self.textProxyAddress.setDisabled(False)
+            self.textProxyPort.setDisabled(False)
+            self.context.sync.proxy=proxy
 
 class OpenFolderDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, parent=None):

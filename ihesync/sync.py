@@ -67,6 +67,7 @@ class Synchro:
         self.ping_address = DEFAULT_PING_ADDRESS
         self.ping_delay = DEFAULT_PING_DELAY
         self.geometry = (0, 0)
+        self.proxy = None
 
     def config_logging(self):
         logging.basicConfig(filename=str(DEFAULT_CONF_DIR / self.log_filename),
@@ -150,6 +151,8 @@ class Synchro:
                         self.ping_delay = self.refdoc[META_TAG]["ping"]["delay"]
                     else:
                         self.ping_delay = DEFAULT_PING_DELAY
+                if "proxy" in self.refdoc[META_TAG]:
+                    self.proxy = self.refdoc[META_TAG]["proxy"]
                 else:
                     self.ping_delay = DEFAULT_PING_DELAY
                     self.ping_address = DEFAULT_PING_ADDRESS
@@ -345,7 +348,7 @@ class Synchro:
                               domains=self.domain_filter, outputdir=self.outputdir,
                               logfile=self.log_filename, loglevel=self.log_level,
                               ping=dict(address=self.ping_address, delay=self.ping_delay),
-                              geometry=self.geometry)
+                              geometry=self.geometry, proxy=self.proxy)
 
         helpers.save_json(filename, sdoc)
 

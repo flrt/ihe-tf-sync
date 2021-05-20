@@ -539,7 +539,7 @@
               <string>Proxy address</string>
              </property>
             </widget>
-            <widget class="QTextEdit" name="textProxyAddress_2">
+            <widget class="QTextEdit" name="textProxyPort">
              <property name="geometry">
               <rect>
                <x>130</x>
