@@ -56,7 +56,7 @@ def load_json(filename):
     return data
 
 
-def download(url, filename):
+def download(url, filename, proxies=None):
     """
         Telechargement de l'URL dans le fichier destination
     :param url: URL a telecharger
@@ -65,7 +65,7 @@ def download(url, filename):
     error = ''
 
     try:
-        req = requests.get(url, stream=True)
+        req = requests.get(url, proxies=proxies, stream=True)
 
         with open(filename, "wb") as f:
             shutil.copyfileobj(req.raw, f)

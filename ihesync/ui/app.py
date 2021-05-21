@@ -188,6 +188,16 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.doc_model.set_documents(data)
         self.tableView.model().layoutChanged.emit()
 
+    def refresh_documents_directory_geometry(self):
+        # get configuration directory geometry for height
+        (conf_x, conf_y, conf_w, conf_h) = self.textConfDir.geometry().getRect()
+        (x, y, w, h) = self.textDocDir.geometry().getRect()
+        if len(self.context.doc_directory) > 60:
+            h = conf_h * 2
+        else:
+            h = conf_h
+        self.textDocDir.setGeometry(x, y, w, h)
+
     def refresh_configuration(self) -> None:
         """
             Refresh the configuration tab
@@ -195,6 +205,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         """
         self.textConfDir.setText(str(self.context.conf_directory))
         self.textDocDir.setText(str(self.context.doc_directory))
+        self.refresh_documents_directory_geometry()
         self.newDocsGroupBox.setVisible(False)
 
         self.textLoggingFilename.setText(str(self.context.sync.log_filename))
@@ -206,7 +217,9 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.textPingPort.setText(str(port))
         self.textPingDelay.setText(str(self.context.sync.ping_delay))
         if self.context.sync.proxy:
-            print(self.context.sync.proxy)
+            self.textProxyAddress.setText(self.context.sync.proxy['address'])
+            self.textProxyPort.setText(self.context.sync.proxy['port'])
+            self.set_proxy_state(self.context.sync.proxy)
         else:
             self.set_proxy_state(None)
 
@@ -274,15 +287,9 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         self.set_proxy_state(None)
 
     @pyqtSlot()
-    def on_systemProxyRadioButton_clicked(self):
-        self.change_status(changed=True)
-        proxy=dict(address=str(self.textProxyAddress.toPlainText()), port=str(self.textProxyPort.toPlainText()))
-        self.set_proxy_state(proxy)
-
-    @pyqtSlot()
     def on_specificProxyRadioButton_clicked(self):
         self.change_status(changed=True)
-        proxy=dict(address=str(self.textProxyAddress.toPlainText()), port=str(self.textProxyPort.toPlainText()))
+        proxy = dict(address=str(self.textProxyAddress.toPlainText()), port=str(self.textProxyPort.toPlainText()))
         self.set_proxy_state(proxy)
 
     @pyqtSlot()
@@ -331,6 +338,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             self.context.doc_directory = str(docdir)
             self.textDocDir.setText(self.context.doc_directory)
             self.change_status(changed=True)
+            self.refresh_documents_directory_geometry()
 
     @pyqtSlot()
     def on_syncButton_clicked(self):
@@ -481,15 +489,21 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             webbrowser.open_new(f"file://{dom}")
 
     def set_proxy_state(self, proxy):
-        if proxy is None:
+        if proxy is None or self.context.sync.proxy['active']==False:
             self.noProxyRadioButton.setChecked(True)
             self.textProxyAddress.setDisabled(True)
             self.textProxyPort.setDisabled(True)
         else:
-            self.specificProxyRadioButton.setChecked(True)
+            if self.context.sync.proxy['active'] and len(self.context.sync.proxy['address']) > 0:
+                self.specificProxyRadioButton.setChecked(True)
+            else:
+                self.noProxyRadioButton.setChecked(True)
             self.textProxyAddress.setDisabled(False)
             self.textProxyPort.setDisabled(False)
-            self.context.sync.proxy=proxy
+            self.context.sync.proxy = proxy
+
+        self.context.sync.proxy['active'] = (proxy is not None and proxy['active'])
+
 
 class OpenFolderDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, parent=None):
