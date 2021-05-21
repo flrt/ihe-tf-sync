@@ -289,7 +289,9 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     @pyqtSlot()
     def on_specificProxyRadioButton_clicked(self):
         self.change_status(changed=True)
-        proxy = dict(address=str(self.textProxyAddress.toPlainText()), port=str(self.textProxyPort.toPlainText()))
+        proxy = dict(address=str(self.textProxyAddress.toPlainText()),
+                     port=str(self.textProxyPort.toPlainText()),
+                     active=True)
         self.set_proxy_state(proxy)
 
     @pyqtSlot()
