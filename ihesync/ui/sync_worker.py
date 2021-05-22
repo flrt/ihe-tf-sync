@@ -3,6 +3,8 @@ import logging
 import socket
 import time
 import datetime
+import ihesync.helpers as helpers
+import requests
 
 WORKER_ACTION_DOWN = 'Download'
 WORKER_ACTION_DEL = 'Delete'
@@ -92,15 +94,20 @@ class SyncWorker(BasicWorker):
 
 
 class NetworkWorker(BasicWorker):
-    def __init__(self, ip, port, delay):
+    def __init__(self, url, proxy, delay):
         super().__init__(None)
-        self.ip = ip
-        self.port = port
+        self.url = url
+        self.proxies = helpers.get_proxies(proxy)
         self.delay = delay
 
+    def set_proxy(self, proxy):
+        self.logger.debug(f"Update proxy in network watchdog {proxy}")
+        self.proxies = helpers.get_proxies(proxy)
+
     def run(self):
+        self.logger.info(f"Start Network watchdog url={self.url} / proxy={self.proxies}")
         while not self.aborted:
-            self.signals.progress.emit((self.ip, self.is_connected()))
+            self.signals.progress.emit((self.url, self.is_connected()))
             for tick in range(self.delay):
                 time.sleep(1)
                 if self.aborted:
@@ -109,7 +116,7 @@ class NetworkWorker(BasicWorker):
     def is_connected(self):
         try:
             # connect to the host -- tells us if the host is actually reachable
-            socket.create_connection((self.ip, self.port))
-            return True
+            r = requests.head(self.url, proxies=self.proxies)
+            return r.status_code == 200
         except OSError:
             return False

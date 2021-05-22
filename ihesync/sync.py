@@ -34,7 +34,6 @@ DEFAULT_CONF_DIR = Path.home() / '.ihe-sync'
 DEFAULT_DOC_DIR = Path.home() / 'Documents' / 'ihe-documents'
 DEFAULT_LOG_FILENAME = "ihe-sync.log"
 DEFAULT_LOG_LEVEL = "ERROR"
-DEFAULT_PING_ADDRESS = ('9.9.9.9', 53)
 DEFAULT_PING_DELAY = 30
 META_TAG = "__meta__"
 
@@ -64,7 +63,6 @@ class Synchro:
         self.last_check = None
         self.domain_filter = []
         self.public_comment = False
-        self.ping_address = DEFAULT_PING_ADDRESS
         self.ping_delay = DEFAULT_PING_DELAY
         self.geometry = (0, 0)
         self.proxy = dict(address='', port='', active=False)
@@ -142,11 +140,6 @@ class Synchro:
                 if "loglevel" in self.refdoc[META_TAG]:
                     self.log_level = self.refdoc[META_TAG]["loglevel"]
                 if "ping" in self.refdoc[META_TAG]:
-                    if "address" in self.refdoc[META_TAG]["ping"]:
-                        self.ping_address = self.refdoc[META_TAG]["ping"]["address"]
-                    else:
-                        self.ping_address = DEFAULT_PING_ADDRESS
-
                     if "delay" in self.refdoc[META_TAG]["ping"]:
                         self.ping_delay = self.refdoc[META_TAG]["ping"]["delay"]
                     else:
@@ -211,13 +204,6 @@ class Synchro:
             "class": doc_class
         }
 
-    def get_proxies(self):
-        ret = None
-        if self.proxy['active']:
-            ret = dict(http=f"{self.proxy['address']}:{self.proxy['port']}",
-                       https=f"{self.proxy['address']}:{self.proxy['port']}")
-        return ret
-
     def get_document_tocheck_list(self):
         result_docs = []
         for domain, docs in self.doc.items():
@@ -242,13 +228,13 @@ class Synchro:
             # get more info with a HEAD request
             self.logger.debug(f"get_document_characteristics {str(doc)}")
             try:
-                headreq = requests.head(doc['href'], proxies=self.get_proxies())
+                headreq = requests.head(doc['href'], proxies=helpers.get_proxies(self.proxy))
 
                 if headreq.status_code == 301:
                     # get the new location
                     # Assume only one redirection happens...
                     doc['href'] = headreq.headers['Location']
-                    headreq = requests.head(doc['href'], proxies=self.get_proxies())
+                    headreq = requests.head(doc['href'], proxies=helpers.get_proxies(self.proxy))
 
                 if headreq.status_code == 200:
                     doc["last-modified"] = headreq.headers["Last-Modified"]
@@ -284,7 +270,7 @@ class Synchro:
         unsorted_docs = {}
         retcode = True
         try:
-            req = requests.get(webpage, proxies=self.get_proxies())
+            req = requests.get(webpage, proxies=helpers.get_proxies(self.proxy))
             doc_class = webpage.split('/')[-2]
 
             if req.status_code == 200:
@@ -352,7 +338,7 @@ class Synchro:
         sdoc[META_TAG] = dict(last_check=self.last_check, public_comment=self.public_comment,
                               domains=self.domain_filter, outputdir=self.outputdir,
                               logfile=self.log_filename, loglevel=self.log_level,
-                              ping=dict(address=self.ping_address, delay=self.ping_delay),
+                              ping=dict(delay=self.ping_delay),
                               geometry=self.geometry, proxy=dict(address=self.proxy['address'],
                                                                  port=self.proxy['port'],
                                                                  active=self.proxy['active']))
@@ -489,7 +475,7 @@ class Synchro:
         """
 
         filename = self.document_path(docinfo, createpath=True)
-        return helpers.download(docinfo["href"], filename, proxies=self.get_proxies())
+        return helpers.download(docinfo["href"], filename, proxies=helpers.get_proxies())
 
     def delete(self, docinfo):
         """

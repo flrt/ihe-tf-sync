@@ -8,6 +8,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import pyqtSlot, QThreadPool
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QLabel, QFrame, QStyleOptionViewItem
 
+import ihesync.sync
 from ihesync import session
 from ihesync.ui import ihesync_app
 from ihesync.ui import documents_model
@@ -121,9 +122,8 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             self.network_label.setStyleSheet('border: 0; color:  red;')
 
     def start_network_watchdog(self):
-        (ip, port) = self.context.sync.ping_address
-        self.logger.debug(f"Start watchdog ip={ip} port={port} delay={self.context.sync.ping_delay}")
-        self.network_watchdog = sync_worker.NetworkWorker(ip, port, self.context.sync.ping_delay)
+        self.network_watchdog = sync_worker.NetworkWorker(ihesync.sync.IHE_URL, self.context.sync.proxy,
+                                                          self.context.sync.ping_delay)
         self.network_watchdog.signals.progress.connect(self.update_network_status)
         self.threadpool.start(self.network_watchdog)
 
@@ -212,16 +212,17 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
         rad = dict(INFO=self.infoRadioButton, ERROR=self.errorRadioButton, DEBUG=self.debugRadioButton)
         if self.context.sync.log_level in rad:
             rad[self.context.sync.log_level].setChecked(True)
-        (ip, port) = self.context.sync.ping_address
-        self.textPingIPaddress.setText(ip)
-        self.textPingPort.setText(str(port))
         self.textPingDelay.setText(str(self.context.sync.ping_delay))
+
         if self.context.sync.proxy:
             self.textProxyAddress.setText(self.context.sync.proxy['address'])
             self.textProxyPort.setText(self.context.sync.proxy['port'])
-            self.set_proxy_state(self.context.sync.proxy)
+            if self.context.sync.proxy["active"]:
+                self.specificProxyRadioButton.setChecked(self.context.sync.proxy["active"])
+                self.noProxyRadioButton.setChecked(not self.context.sync.proxy["active"])
+            self.update_proxy_state()
         else:
-            self.set_proxy_state(None)
+            self.noProxyRadioButton.setChecked(True)
 
     def refresh_information_counts(self) -> None:
         """
@@ -284,15 +285,23 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     @pyqtSlot()
     def on_noProxyRadioButton_clicked(self):
         self.change_status(changed=True)
-        self.set_proxy_state(None)
+        self.context.sync.proxy["active"] = False
+        self.textProxyAddress.setDisabled(True)
+        self.textProxyPort.setDisabled(True)
 
     @pyqtSlot()
     def on_specificProxyRadioButton_clicked(self):
         self.change_status(changed=True)
-        proxy = dict(address=str(self.textProxyAddress.toPlainText()),
-                     port=str(self.textProxyPort.toPlainText()),
-                     active=True)
-        self.set_proxy_state(proxy)
+        self.context.sync.proxy["active"] = True
+        self.textProxyAddress.setDisabled(False)
+        self.textProxyPort.setDisabled(False)
+
+    @pyqtSlot()
+    def on_changeProxyPushButton_clicked(self):
+        self.change_status(changed=True)
+        self.context.sync.proxy['address'] = str(self.textProxyAddress.toPlainText())
+        self.context.sync.proxy['port'] = str(self.textProxyPort.toPlainText())
+        self.update_proxy_state()
 
     @pyqtSlot()
     def on_changeLogPushButton_clicked(self):
@@ -352,15 +361,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
     @pyqtSlot()
     def on_changeConnectionPushButton_clicked(self):
         # get values before change
-        (new_ip, new_port) = self.context.sync.ping_address
         new_delay = self.context.sync.ping_delay
-        new_ip = self.textPingIPaddress.toPlainText()
-        try:
-            new_port = int(self.textPingPort.toPlainText())
-        except ValueError as p_err:
-            self.change_status("Port value must be numeric !!!", )
-            self.logger.error(f"Configuration error while setting non numeric value for port {p_err}")
-            self.textPingPort.setText(str(new_port))
         try:
             new_delay = int(self.textPingDelay.toPlainText())
         except ValueError as d_err:
@@ -368,8 +369,7 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             self.logger.error(f"Configuration error while setting non numeric value for delay {d_err}")
             self.textPingDelay.setText(str(new_delay))
 
-        if (new_ip, new_port) != self.context.sync.ping_address or new_delay != self.context.sync.ping_delay:
-            self.context.sync.ping_address = (new_ip, new_port)
+        if new_delay != self.context.sync.ping_delay:
             self.context.sync.ping_delay = new_delay
             self.stop_network_watchdog()
             self.start_network_watchdog()
@@ -490,21 +490,10 @@ class Ui(QtWidgets.QMainWindow, ihesync_app.Ui_MainWindow):
             dom = self.context.local_path_domain(docinfo['domain'])
             webbrowser.open_new(f"file://{dom}")
 
-    def set_proxy_state(self, proxy):
-        if proxy is None or self.context.sync.proxy['active']==False:
-            self.noProxyRadioButton.setChecked(True)
-            self.textProxyAddress.setDisabled(True)
-            self.textProxyPort.setDisabled(True)
-        else:
-            if self.context.sync.proxy['active'] and len(self.context.sync.proxy['address']) > 0:
-                self.specificProxyRadioButton.setChecked(True)
-            else:
-                self.noProxyRadioButton.setChecked(True)
-            self.textProxyAddress.setDisabled(False)
-            self.textProxyPort.setDisabled(False)
-            self.context.sync.proxy = proxy
-
-        self.context.sync.proxy['active'] = (proxy is not None and proxy['active'])
+    def update_proxy_state(self):
+        self.stop_network_watchdog()
+        self.network_watchdog.set_proxy(self.context.sync.proxy)
+        self.start_network_watchdog()
 
 
 class OpenFolderDelegate(QtWidgets.QStyledItemDelegate):

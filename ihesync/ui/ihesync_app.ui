@@ -40,7 +40,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tabDomains">
          <attribute name="title">
@@ -393,7 +393,7 @@
                <x>240</x>
                <y>120</y>
                <width>100</width>
-               <height>30</height>
+               <height>26</height>
               </rect>
              </property>
              <property name="text">
@@ -410,7 +410,7 @@
                <x>130</x>
                <y>120</y>
                <width>100</width>
-               <height>30</height>
+               <height>26</height>
               </rect>
              </property>
              <property name="text">
@@ -440,7 +440,7 @@
                <x>590</x>
                <y>80</y>
                <width>120</width>
-               <height>30</height>
+               <height>26</height>
               </rect>
              </property>
              <property name="text">
@@ -549,6 +549,23 @@
               <string>Proxy port</string>
              </property>
             </widget>
+            <widget class="QPushButton" name="changeProxyPushButton">
+             <property name="geometry">
+              <rect>
+               <x>590</x>
+               <y>80</y>
+               <width>120</width>
+               <height>26</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string>change</string>
+             </property>
+             <property name="icon">
+              <iconset resource="resources.qrc">
+               <normaloff>:/img/change.svg</normaloff>:/img/change.svg</iconset>
+             </property>
+            </widget>
            </widget>
           </item>
           <item>
@@ -556,7 +573,7 @@
             <property name="minimumSize">
              <size>
               <width>720</width>
-              <height>150</height>
+              <height>80</height>
              </size>
             </property>
             <property name="title">
@@ -568,59 +585,13 @@
             <property name="checkable">
              <bool>false</bool>
             </property>
-            <widget class="QLabel" name="labelPingAddress">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>40</y>
-               <width>91</width>
-               <height>20</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>IP address</string>
-             </property>
-            </widget>
-            <widget class="QTextEdit" name="textPingIPaddress">
-             <property name="geometry">
-              <rect>
-               <x>130</x>
-               <y>40</y>
-               <width>410</width>
-               <height>26</height>
-              </rect>
-             </property>
-            </widget>
-            <widget class="QTextEdit" name="textPingPort">
-             <property name="geometry">
-              <rect>
-               <x>130</x>
-               <y>80</y>
-               <width>100</width>
-               <height>26</height>
-              </rect>
-             </property>
-            </widget>
-            <widget class="QLabel" name="labelPingPort">
-             <property name="geometry">
-              <rect>
-               <x>10</x>
-               <y>80</y>
-               <width>67</width>
-               <height>20</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>Port</string>
-             </property>
-            </widget>
             <widget class="QPushButton" name="changeConnectionPushButton">
              <property name="geometry">
               <rect>
                <x>590</x>
                <y>40</y>
                <width>120</width>
-               <height>30</height>
+               <height>26</height>
               </rect>
              </property>
              <property name="text">
@@ -631,24 +602,11 @@
                <normaloff>:/img/change.svg</normaloff>:/img/change.svg</iconset>
              </property>
             </widget>
-            <widget class="QLabel" name="labelInfoConnection">
-             <property name="geometry">
-              <rect>
-               <x>260</x>
-               <y>85</y>
-               <width>421</width>
-               <height>20</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>IP &amp; Port used to test if the network connection is available</string>
-             </property>
-            </widget>
             <widget class="QTextEdit" name="textPingDelay">
              <property name="geometry">
               <rect>
                <x>130</x>
-               <y>120</y>
+               <y>40</y>
                <width>100</width>
                <height>26</height>
               </rect>
@@ -658,20 +616,20 @@
              <property name="geometry">
               <rect>
                <x>10</x>
-               <y>120</y>
+               <y>40</y>
                <width>111</width>
                <height>20</height>
               </rect>
              </property>
              <property name="text">
-              <string>Refresh every</string>
+              <string>Check every</string>
              </property>
             </widget>
             <widget class="QLabel" name="labelRefreshDelay_2">
              <property name="geometry">
               <rect>
-               <x>260</x>
-               <y>125</y>
+               <x>270</x>
+               <y>40</y>
                <width>111</width>
                <height>20</height>
               </rect>

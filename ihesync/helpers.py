@@ -56,6 +56,14 @@ def load_json(filename):
     return data
 
 
+def get_proxies(proxy):
+    ret = None
+    if proxy and 'active' in proxy and proxy['active']:
+        ret = dict(http=f"{proxy['address']}:{proxy['port']}",
+                   https=f"{proxy['address']}:{proxy['port']}")
+    return ret
+
+
 def download(url, filename, proxies=None):
     """
         Telechargement de l'URL dans le fichier destination
