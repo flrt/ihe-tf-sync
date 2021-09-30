@@ -475,7 +475,7 @@ class Synchro:
         """
 
         filename = self.document_path(docinfo, createpath=True)
-        return helpers.download(docinfo["href"], filename, proxies=helpers.get_proxies())
+        return helpers.download(docinfo["href"], filename, proxies=helpers.get_proxies(self.proxy))
 
     def delete(self, docinfo):
         """
